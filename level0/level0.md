@@ -69,7 +69,7 @@ Via gdb on peut obtenir le programme qui sera lancé par `execve`:
 +0x80c5348:	 "/bin/sh"
 ```
 
-C'est donc un shell qui sera exécuter avec les droits de `level1`. On va donc pouvoir `cat` le fichier `.pass` présent dans le `home` du user `level1`.
+C'est donc un shell qui sera exécuter avec les droits de `level1` (ça permet de passer les protections d'`execve`). On va donc pouvoir `cat` le fichier `.pass` présent dans le `home` du user `level1`.
 
 Il nous faut donc éviter le jump après la fonction `atoi` afin d'atteindre `execve`. Pour celà on doit trouver la valeur exacte de `0x1a7`:
 
