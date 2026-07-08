@@ -137,9 +137,8 @@ Ici `%60d` cible l'argument suivant disponible sur la pile (ici `512`), et pad l
 On entre ensuite dans le subshell, on vérifie l'euid avec la commande `id` et on récupère le token :
 
 ``` bash
-id 
+id
 uid=2022(level3) gid=2022(level3) euid=2025(level4) egid=100(users) groups=2025(level4),100(users),2022(level3)
 cat /home/user/level4/.pass
 b209ea91ad69ef36f2cf0fcbbc24c739fd10464cf545b20bea8572ebdc3c36fa
 ```
-
