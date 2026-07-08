@@ -14,7 +14,7 @@ dr-x--x--x  1 root   root    340 Sep 23  2015 ..
 -rw-r--r--  1 level2 level2  675 Apr  3  2012 .profile
 ```
 
-Le fichier `level1` est un exécutable.
+Le fichier `level2` est un exécutable.
 
 Le bit `SUID` est activé, l'utilisateur `level2` peut exécuter le programme avec les droits de `level3`.
 
