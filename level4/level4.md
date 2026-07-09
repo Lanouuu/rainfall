@@ -48,7 +48,7 @@ Breakpoint 2, 0x08048460 in n ()
 ```
 
 Le code assembleur de `n` montre un appel à la fonction sécurisée `fgets` qui prend stdin en argument.
-La fonction `p` elle appelle `printf` qui prend uniquement un buffer via stdin comme argument.
+La fonction `p` appelle `printf` qui prend uniquement un buffer via stdin comme argument.
 
 
 ``` diff
@@ -124,11 +124,11 @@ AAAAb7ff26b0-bffff784-b7fd0ff4-00000000-00000000-bffff748-0804848d-bffff540-0000
 Comme l'indique la valeur `41` en hexa (correspondant au char 'A'), l'argument du `printf` se situe à la douzième position.
 
 Pour l'exploit on va écrire un script python qui écrit:
-- l'adresse `0x8049810` en little endian "\x10\x98\x04\x08" 
+- l'adresse `0x8049810` en little endian `\x10\x98\x04\x08` 
 - un padding de 16930112, qui correspond à 16930116 moins les 4 octets de l'adresse
 - et cibler le 12ème argument (correspondant à 0x8049810) avec `%n` pour écrire les 16930116 octets jusque là écrits 
 
-Le spécificateur %n écrit, à l'adresse pointée par l'argument correspondant, le nombre total de caractères déjà affichés par printf à ce stade de l'exécution, c'est cette primitive d'écriture qui permet de contrôler la valeur de la variable m.
+Le spécificateur `%n` écrit, à l'adresse pointée par l'argument correspondant, le nombre total de caractères déjà affichés par printf à ce stade de l'exécution, c'est cette primitive d'écriture qui permet de contrôler la valeur de la variable m.
 
 D'autre part, contrairement au level3 où le padding se faisait par répétition littérale de caractères, il serait ici  impraticable d'envoyer 16930112 octets de bourrage dans le payload lui-même. On utilise donc le champ de largeur de %d (%16930112d) qui permet d'obtenir le même effet de comptage sans avoir à transmettre physiquement ces octets : printf génère lui-même le padding en interne.
 
