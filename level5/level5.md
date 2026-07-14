@@ -43,18 +43,18 @@ End of assembler dump.
 Dump of assembler code for function n:
    0x080484c2 <+0>:	push   ebp
    0x080484c3 <+1>:	mov    ebp,esp
-   0x080484c5 <+3>:	sub    esp,0x218
-   0x080484cb <+9>:	mov    eax,ds:0x8049848
-   0x080484d0 <+14>:	mov    DWORD PTR [esp+0x8],eax
-   0x080484d4 <+18>:	mov    DWORD PTR [esp+0x4],0x200
-   0x080484dc <+26>:	lea    eax,[ebp-0x208]
-   0x080484e2 <+32>:	mov    DWORD PTR [esp],eax
-   0x080484e5 <+35>:	call   0x80483a0 <fgets@plt>
-   0x080484ea <+40>:	lea    eax,[ebp-0x208]
-   0x080484f0 <+46>:	mov    DWORD PTR [esp],eax
-   0x080484f3 <+49>:	call   0x8048380 <printf@plt>
-   0x080484f8 <+54>:	mov    DWORD PTR [esp],0x1
-   0x080484ff <+61>:	call   0x80483d0 <exit@plt>
+   0x080484c5 <+3>:	sub    esp,0x218                       # + 536 d'espace local sur la pile
+   0x080484cb <+9>:	mov    eax,ds:0x8049848                # var globale de la libc (stdin)
+   0x080484d0 <+14>:	mov    DWORD PTR [esp+0x8],eax         # 3eme arg de fgets (stdin)
+   0x080484d4 <+18>:	mov    DWORD PTR [esp+0x4],0x200       # 2eme arg de fgets (constante littérale 512)
+   0x080484dc <+26>:	lea    eax,[ebp-0x208]                 # On récupère l'adresse du buffer (520)
+   0x080484e2 <+32>:	mov    DWORD PTR [esp],eax             # 1er arg de fgets (buffer)
+   0x080484e5 <+35>:	call   0x80483a0 <fgets@plt>           # fgets(buffer, 512, stdin)
+   0x080484ea <+40>:	lea    eax,[ebp-0x208]                 # On récupère l'adresse du buffer (520)
+   0x080484f0 <+46>:	mov    DWORD PTR [esp],eax             # arg de printf (buffer)
+   0x080484f3 <+49>:	call   0x8048380 <printf@plt>          # printf(buffer)
+   0x080484f8 <+54>:	mov    DWORD PTR [esp],0x1             # arg de exit (1)
+   0x080484ff <+61>:	call   0x80483d0 <exit@plt>            # exit(1)
 End of assembler dump.
 ```
 
@@ -81,10 +81,10 @@ Dump of assembler code for function o:
    0x080484a4 <+0>:	push   ebp
    0x080484a5 <+1>:	mov    ebp,esp
    0x080484a7 <+3>:	sub    esp,0x18
-   0x080484aa <+6>:	mov    DWORD PTR [esp],0x80485f0
-   0x080484b1 <+13>:	call   0x80483b0 <system@plt>
-   0x080484b6 <+18>:	mov    DWORD PTR [esp],0x1
-   0x080484bd <+25>:	call   0x8048390 <_exit@plt>
+   0x080484aa <+6>:	mov    DWORD PTR [esp],0x80485f0       # arg de system ()"/bin/sh")
+   0x080484b1 <+13>:	call   0x80483b0 <system@plt>          # system("/bin/sh)
+   0x080484b6 <+18>:	mov    DWORD PTR [esp],0x1             # arg exit (1)
+   0x080484bd <+25>:	call   0x8048390 <_exit@plt>           # _exit(1)
 End of assembler dump.
 
 (gdb) x/s 0x80485f0
