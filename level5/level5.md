@@ -91,7 +91,7 @@ End of assembler dump.
 0x80485f0:	 "/bin/sh"
 ```
 
-La fonction `o()` est présente dans le binaire, mais aucune instruction du programme ne la référence. Elle est donc inatteignable dans le déroulement normal de l'exécution. Pour l'exécuter malgré tout, il faut détourner le flux de contrôle vers son adresse. La vulnérabilité de format string nous permet justement d'écrire une valeur arbitraire en mémoire grâce au spécificateur %n. Une cible idéale est alors l'entrée GOT de exit, puisque `n()` appelle systématiquement `exit(1)` juste après le printf vulnérable. En remplaçant l'adresse de exit par celle de o(), l'appel à exit exécutera en réalité `o()`.
+La fonction `o()` est présente dans le binaire, mais aucune instruction du programme ne la référence. Elle est donc inatteignable dans le déroulement normal de l'exécution. Pour l'exécuter malgré tout, il faut détourner le flux de contrôle vers son adresse. La vulnérabilité de format string nous permet justement d'écrire une valeur arbitraire en mémoire grâce au spécificateur `%n`. Une cible idéale est alors l'entrée `GOT` de exit, puisque `n()` appelle systématiquement `exit(1)` juste après le printf vulnérable. En remplaçant l'adresse de `exit` par celle de `o()`, l'appel à `exit` exécutera en réalité `o()`.
 
 ``` bash
 0x080484a4  o                    # == 134513828
@@ -119,22 +119,19 @@ A `exit+0` l'étoile `*` signifie saut indirect, on ne saute pas à l'adresse el
 On va modifier l'adresse sur laquelle pointe `0x8049838` pour qu'elle corresponde à l'adresse de `o` (`0x080484a4`).
 Pour cela on va utiliser le spécificateur de `printf` `%n`. Le spécificateur `%n` n'affiche rien. À la place, il écrit dans l'adresse pointée par son argument le nombre de caractères déjà imprimés par printf
 
-Pour cela on va convertir `o` en décimal. 
-`0x080484a4` en hexa correspond à `134513828` en décimal.
-On va écrire l'adresse de l'entrée GOT de `exit` en premier argument en little endian (`\x38\x98\x04\x08`).
-
-Le payload final s'écrit donc : l'adresse GOT ciblée (`\x38\x98\x04\x08`), suivie d'un padding de largeur 134513824 (soit 134513828, la valeur décimale de l'adresse de `o`, moins les 4 octets déjà émis par l'écriture de l'adresse elle-même), puis `%4$n` pour effectuer l'écriture à la position repérée précédemment.
-
-Puis on cible l'endroit où commence l'argument du printf avec le spécificateur `%x` 
-
+Pour construire notre exploit on va d'abord avoir besoin d'identifier où commence l'argument de `printf` dans notre sortie.
+Pour cela on va utiliser le spécificateur `%x` qui permet d'afficher des valeurs arbitraires en hexa dans un ordre ascendant. 
+ 
 ``` bash
 level5@RainFall:~$ echo $(python2 -c "print 'AAAA' + '%x-' *10") |./level5
 AAAA200-b7fd1ac0-b7ff37d0-41414141-252d7825-78252d78-2d78252d-252d7825-78252d78-2d78252d-
 ```
 
-Les quatre A apparaissent comme quatrième argument interprété par printf. L'adresse placée au début du payload sera donc également vue comme le quatrième argument, d'où l'utilisation de %4$n.
+Les quatre "A" apparaissent comme quatrième argument interprété par printf. L'adresse placée au début du payload sera donc également vue comme le quatrième argument, nous utiliserons donc le spécificateur `%4$n` pour modifier la valeur surlquelle elle pointe.
 
-Voici donc notre exploit sous la forme d'un petit script python:
+Maintenant que l'on a identifié l'adresse à laquelle écrire, l'emplacement de l'argument de `printf` et l'adresse à écrire sur la valeur pointée par cet argument on va calculer comment lui transmettre la valeur de l'adresse de `o` en décimal. `o` correspond à `0x080484a4` en hexa et à `134513828` en décimal. Cette valeur nous permet de calculer le padding voulu, d'une de largeur 134513824 (soit 134513828, la valeur décimale de l'adresse de `o`, moins les 4 octets déjà émis par l'écriture de l'adresse elle-même).
+
+Voici donc notre exploit sous la forme d'un petit script python ainsi que son résultat:
 
 
 ``` bash
@@ -149,8 +146,10 @@ d3b7bf1025225bd715fa8ccb54ef06ca70b9125ac855aeab4878217177f41a31
 ```
 
 On peut décomposer notre commande de cette manière :
-- On place en début de chaîne l'adresse de l'entrée GOT de exit (`0x8049838`) en little endian (`\x38\x98\x04\x08`). Cette adresse deviendra le premier argument manipulé par %n
-- `%134513824d` demande à printf d'afficher un entier avec une largeur minimale de 134513824 caractères. Comme l'entier effectivement lu sur la pile est très petit (512 dans notre cas), printf complète l'affichage avec des espaces. Au total, 134513824 caractères sont imprimés, ce qui permet à `%n` d'écrire exactement la valeur souhaitée.
-La valeur affichée (512 ici) dépend simplement de ce qui se trouve à cet emplacement de la pile. Elle n'a aucune importance : seule la largeur du champ nous intéresse.
+- On place en début de chaîne l'adresse de l'entrée GOT de exit (`0x8049838`) en little endian (`\x38\x98\x04\x08`). Cette adresse deviendra le premier argument manipulé par %n;
+- `%134513824d` demande à printf d'afficher un entier avec une largeur minimale de 134513824 caractères. Comme l'entier effectivement lu sur la pile est très petit (512 dans notre cas), printf complète l'affichage avec des espaces. Au total, 134513824 caractères sont imprimés, ce qui permet à `%n` d'écrire exactement la valeur souhaitée;
+- La valeur affichée (512 ici) dépend simplement de ce qui se trouve à cet emplacement de la pile. Elle n'a aucune importance, seule la largeur du champ nous intéresse.
 - `%4$n` permet de désigner le 4ème argument affiché par printf pour modifier la valeur sur lequel il pointe en écrivant les octets jusque-là écrits en mémoire.
+
+L'exploit pernet bien d'atteindre la fonction `o` qui ouvre un sub-shell avec des permission SUID. On va donc pouvoir afficher le fichier `.pass` du level6.
 
