@@ -18,6 +18,14 @@ Le fichier `level2` est un exécutable.
 
 Le bit `SUID` est activé, l'utilisateur `level2` peut exécuter le programme avec les droits de `level3`.
 
+Le programme attend une string qu'il print sur stdout :
+
+``` bash
+level2@RainFall:~$ ./level2
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+```
+
 En observant le code assembleur du main on peut voir un appel à la fonction `p`.
 
 ``` bash
@@ -32,7 +40,7 @@ Dump of assembler code for function main:
 End of assembler dump.
 ```
 
-Voici ensuite le code assembleur de la fonciton `p`:
+Voici ensuite le code assembleur de la fonction `p`:
 
 ``` bash
 (gdb) disas p
@@ -41,10 +49,10 @@ Dump of assembler code for function p:
    0x080484d5 <+1>:	mov    ebp,esp                        # Nouvelle base de frame
    0x080484d7 <+3>:	sub    esp,0x68                       # Ajout de 104 octets sur la stack (espace global)
    0x080484da <+6>:	mov    eax,ds:0x8049860               # Recupère le pointeur global (stdout)
-   0x080484df <+11>:	mov    DWORD PTR [esp],eax            
+   0x080484df <+11>:	mov    DWORD PTR [esp],eax            # arg de fflush (stdout) 
    0x080484e2 <+14>:	call   0x80483b0 <fflush@plt>         # fflush(stdout)
    0x080484e7 <+19>:	lea    eax,[ebp-0x4c]                 # eax = adresse du buffer (ebp - 76)
-   0x080484ea <+22>:	mov    DWORD PTR [esp],eax            # esp = adresse dans eax (buffer)
+   0x080484ea <+22>:	mov    DWORD PTR [esp],eax            # arg de gets (buffer)
    0x080484ed <+25>:	call   0x80483c0 <gets@plt>           # gets(buffer)
    0x080484f2 <+30>:	mov    eax,DWORD PTR [ebp+0x4]        # ebp+0x4 == adresse de retour       
    0x080484f5 <+33>:	mov    DWORD PTR [ebp-0xc],eax        
@@ -55,16 +63,16 @@ Dump of assembler code for function p:
    0x08048507 <+51>:	mov    eax,0x8048620                  # sinon : détection, message d'erreur, exit
    0x0804850c <+56>:	mov    edx,DWORD PTR [ebp-0xc]
    0x0804850f <+59>:	mov    DWORD PTR [esp+0x4],edx
-   0x08048513 <+63>:	mov    DWORD PTR [esp],eax
-   0x08048516 <+66>:	call   0x80483a0 <printf@plt>
-   0x0804851b <+71>:	mov    DWORD PTR [esp],0x1
-   0x08048522 <+78>:	call   0x80483d0 <_exit@plt>
+   0x08048513 <+63>:	mov    DWORD PTR [esp],eax            # 1er arg de printf
+   0x08048516 <+66>:	call   0x80483a0 <printf@plt>         # printf
+   0x0804851b <+71>:	mov    DWORD PTR [esp],0x1            # arg de exit (1)
+   0x08048522 <+78>:	call   0x80483d0 <_exit@plt>          # exit(1)
    0x08048527 <+83>:	lea    eax,[ebp-0x4c]
    0x0804852a <+86>:	mov    DWORD PTR [esp],eax
    0x0804852d <+89>:	call   0x80483f0 <puts@plt>           # affiche le buffer
    0x08048532 <+94>:	lea    eax,[ebp-0x4c]
    0x08048535 <+97>:	mov    DWORD PTR [esp],eax
-   0x08048538 <+100>:	call   0x80483e0 <strdup@plt>         # dupe le buffer sur la heap
+   0x08048538 <+100>:	call   0x80483e0 <strdup@plt>      # dupe le buffer sur la heap
    0x0804853d <+105>:	leave  
    0x0804853e <+106>:	ret    
 End of assembler dump.
@@ -148,7 +156,7 @@ En effet, on rentre dans la partie à `p+51` du programme qui va écrire l'adres
 ```
 
 Cette partie du programme vérifie la valeur de `eip`, modifiée dans l'exploit précédent.
-La valeur de `eip` est mise `eax` pour faire une comparaison avec `and` et `cmp`.
+La valeur de `eip` est mise dans `eax` pour faire une comparaison avec `and` et `cmp`.
 A `p+44` l'instruction `and eax,0xb0000000` met à 0 tous les bits où le masque vaut 0 et conserve la valeur de `eax` là où le masque vaut 1. 
 
 Dans l'exploit précédent la valeur comparée est `bffff6e0` et `1011 1111 1111 1111 1111 0110 1110 0000` en binaire.
