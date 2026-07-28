@@ -15,6 +15,13 @@ dr-x--x--x  1 root   root    340 Sep 23  2015 ..
 ```
 
 Le fichier `level3` est un exécutable.
+Le programme attend une string qu'il print sur stdout :
+
+``` bash
+level3@RainFall:~$ ./level3 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+```
 
 Le bit `SUID` est activé, l'utilisateur `level3` peut exécuter le programme avec les droits de `level4`.
 
@@ -40,28 +47,28 @@ Dump of assembler code for function v:
    0x080484a4 <+0>:	push   ebp
    0x080484a5 <+1>:	mov    ebp,esp
    0x080484a7 <+3>:	sub    esp,0x218
-   0x080484ad <+9>:	mov    eax,ds:0x8049860                # probablement stdin mis dans eax
-   0x080484b2 <+14>:	mov    DWORD PTR [esp+0x8],eax         # esp+0x8 = stdin
-   0x080484b6 <+18>:	mov    DWORD PTR [esp+0x4],0x200       # esp+0x4 = 512 (decimal)
-   0x080484be <+26>:	lea    eax,[ebp-0x208]                 # eax = ebp - 520 (decimal)
-   0x080484c4 <+32>:	mov    DWORD PTR [esp],eax             # 
-   0x080484c7 <+35>:	call   0x80483a0 <fgets@plt>           
-   0x080484cc <+40>:	lea    eax,[ebp-0x208]                 # on met dans eax le buffer situe a ebp-0x208
-   0x080484d2 <+46>:	mov    DWORD PTR [esp],eax             # on fait pointer esp vers eax pour l'arg de printf
-   0x080484d5 <+49>:	call   0x8048390 <printf@plt>
-   0x080484da <+54>:	mov    eax,ds:0x804988c                # on met la valeur pointee par 0x804988c  dans eax
+   0x080484ad <+9>:	mov    eax,ds:0x8049860                # stdin mis dans eax
+   0x080484b2 <+14>:	mov    DWORD PTR [esp+0x8],eax         # 3eme arg de fgets (esp+0x8 = stdin)
+   0x080484b6 <+18>:	mov    DWORD PTR [esp+0x4],0x200       # 2eme arg de fgets (esp+0x4 = 512)
+   0x080484be <+26>:	lea    eax,[ebp-0x208]                 # buffer a ebp - 520 (decimal)
+   0x080484c4 <+32>:	mov    DWORD PTR [esp],eax             # 1er arg de fgets (buffer)
+   0x080484c7 <+35>:	call   0x80483a0 <fgets@plt>           # fgets(buffer, 512, stdin)
+   0x080484cc <+40>:	lea    eax,[ebp-0x208]                 # buffer situe a ebp-0x208
+   0x080484d2 <+46>:	mov    DWORD PTR [esp],eax             # arg de printf (buffer)
+   0x080484d5 <+49>:	call   0x8048390 <printf@plt>          # printf(buffer)
+   0x080484da <+54>:	mov    eax,ds:0x804988c                # on met la valeur pointee par 0x804988c dans eax
    0x080484df <+59>:	cmp    eax,0x40                        # if eax == 64
-   0x080484e2 <+62>:	jne    0x8048518 <v+116>
-   0x080484e4 <+64>:	mov    eax,ds:0x8049880
+   0x080484e2 <+62>:	jne    0x8048518 <v+116>               
+   0x080484e4 <+64>:	mov    eax,ds:0x8049880                # stdout
    0x080484e9 <+69>:	mov    edx,eax
-   0x080484eb <+71>:	mov    eax,0x8048600
-   0x080484f0 <+76>:	mov    DWORD PTR [esp+0xc],edx
-   0x080484f4 <+80>:	mov    DWORD PTR [esp+0x8],0xc
-   0x080484fc <+88>:	mov    DWORD PTR [esp+0x4],0x1
-   0x08048504 <+96>:	mov    DWORD PTR [esp],eax
-   0x08048507 <+99>:	call   0x80483b0 <fwrite@plt>
-   0x0804850c <+104>:	mov    DWORD PTR [esp],0x804860d
-   0x08048513 <+111>:	call   0x80483c0 <system@plt>
+   0x080484eb <+71>:	mov    eax,0x8048600                   # "Wait what?!\n"
+   0x080484f0 <+76>:	mov    DWORD PTR [esp+0xc],edx         # 3eme arg de fwrite (stdout)
+   0x080484f4 <+80>:	mov    DWORD PTR [esp+0x8],0xc         # ???
+   0x080484fc <+88>:	mov    DWORD PTR [esp+0x4],0x1         # ???
+   0x08048504 <+96>:	mov    DWORD PTR [esp],eax             # 1er arg de fwrite ("Wait what?!\n")
+   0x08048507 <+99>:	call   0x80483b0 <fwrite@plt>          # size_t fwrite(const void ptr[restrict .size * .n], size_t size, size_t n, FILE *restrict stream);
+   0x0804850c <+104>:	mov    DWORD PTR [esp],0x804860d    # arg de system ("/bin/sh")
+   0x08048513 <+111>:	call   0x80483c0 <system@plt>       # system(""/bin/sh")
    0x08048518 <+116>:	leave  
    0x08048519 <+117>:	ret    
 End of assembler dump.
@@ -75,7 +82,14 @@ Ici la fonction `fgets()` lit au maximum jusqu'à sizeof(buffer) - 1, soit 511 c
 La faille réside dans l'utilisation de `printf()` dont le seul argument est le buffer. On va donc exploiter une vulnérabilité de type format string. C'est une faille où une chaine fournie par l'utilisateur est passée directement comme argument de format à une fonction de la famille `printf`, permettant de lire `%x`, `%s` ou d'écrire (`%n`) en mémoire au-delá des arguments normalement attendus par la fonction.
 
 Ensuite, à `v+59` on compare la valeur pointée par l'adresse `0x804988c` avec `0x40` (`64` en décimal).
-A `v+62`, si cette valeur n'est pas égale on `jump` à `v+116`, et on quitte la fonction avec `leave` et `ret`.
+Cette valeur ne se situe pas sur la pile, il s'agit d'une valeur globale initialisée à `0`.
+``` bash
+(gdb) x/s 0x804988c
+0x804988c <m>:	 ""
+(gdb) x/d 0x804988c
+0x804988c <m>:	0
+```
+A `v+62`, si cette valeur n'est pas égale l'instruction `jump` décale l'exécution `v+116`, et on quitte la fonction avec `leave` et `ret`.
 Si la valeur à `0x804988c` est égale à `0x40`, alors on rentre dans le bloc d'instruction qui va executer un `fwrite()` puis un appel système avec "/bin/sh" comme argument.
 
 On peut le déduire en inspectant les données aux adresses `0x8048600` (`v+71`) et `0x804860d` (`v+104`) qui sont mises dans les valeurs pointées par `esp` pour être passées en argument de `fwrite()` puis de `system()`
