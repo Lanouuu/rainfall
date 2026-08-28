@@ -1,37 +1,88 @@
-``` c
+# LEVEL6
 
-void n(void)
-
-{
-  system("/bin/cat /home/user/level7/.pass");
-  return;
-}
-
-
-
-void m(void *param_1,int param_2,char *param_3,int param_4,int param_5)
-
-{
-  puts("Nope");
-  return;
-}
-
-
-
-void main(undefined4 param_1,int param_2)
-
-{
-  char *__dest;
-  undefined4 *puVar1;
-  
-  __dest = malloc(0x40);                                    // == 64
-  puVar1 = malloc(4);
-  *puVar1 = m;
-  strcpy(__dest,*(char **)(param_2 + 4));
-  (*(code *)*puVar1)();
-  return;
-}
+Le système de fichier se présente de cette manière:
+``` bash
+level6@RainFall:~$ ls -la
+total 17
+dr-xr-x---+ 1 level6 level6   80 Mar  6  2016 .
+dr-x--x--x  1 root   root    340 Sep 23  2015 ..
+-rw-r--r--  1 level6 level6  220 Apr  3  2012 .bash_logout
+-rw-r--r--  1 level6 level6 3530 Sep 23  2015 .bashrc
+-rwsr-s---+ 1 level7 users  5274 Mar  6  2016 level6
+-rw-r--r--+ 1 level6 level6   65 Sep 23  2015 .pass
+-rw-r--r--  1 level6 level6  675 Apr  3  2012 .profile
 ```
+
+L'executable segfault sans argument et affiche la chaine "Nope" sur stdout avec, on note aussi qu'un argument trop grand peut provoquer un segfault.
+
+``` bash
+level6@RainFall:~$ ./level6
+Segmentation fault (core dumped)
+level6@RainFall:~$ 
+level6@RainFall:~$ ./level6 aaaaaaaaaaa
+Nope
+level6@RainFall:~$ ./level6 $(echo $(python2 -c 'import sys; sys.stdout.write("A" * 100)'))
+Segmentation fault (core dumped)
+```
+
+En observant le programme avec gdb on identifie la fonction `strcpy()` dans laquelle réside la faille.
+FAILLE AVEC DIFFERENTS MALLOC
+
+On identifie les fonciton `n` et `m`.
+
+``` bash
+(gdb) info functions
+All defined functions:
+[...]
+0x08048454  n
+0x08048468  m
+0x0804847c  main
+[...]
+```
+
+La fonction `m` affiche la chaine "Nope" sur stdout:
+
+``` bash
+(gdb) disas m
+Dump of assembler code for function m:
+   0x08048468 <+0>:	push   ebp
+   0x08048469 <+1>:	mov    ebp,esp
+   0x0804846b <+3>:	sub    esp,0x18
+   0x0804846e <+6>:	mov    DWORD PTR [esp],0x80485d1
+   0x08048475 <+13>:	call   0x8048360 <puts@plt>
+   0x0804847a <+18>:	leave  
+   0x0804847b <+19>:	ret    
+End of assembler dump.
+
+(gdb) b main
+Breakpoint 1 at 0x804847f
+
+(gdb) x/s 0x80485d1
+0x80485d1:	 "Nope"
+```
+
+Elle est appelée dans le main à main+84.
+Le call ne correspond a a un call d'une adresse en dur main de eax.
+
+
+La fonction `n` n'est jamais appelée et fait un appel à `system` qui prend "/bin/cat /home/user/level7/.pass" en argument:
+
+``` bash
+(gdb) disas n
+Dump of assembler code for function n:
+   0x08048454 <+0>:	push   %ebp
+   0x08048455 <+1>:	mov    %esp,%ebp
+   0x08048457 <+3>:	sub    $0x18,%esp
+   0x0804845a <+6>:	movl   $0x80485b0,(%esp)
+   0x08048461 <+13>:	call   0x8048370 <system@plt>
+   0x08048466 <+18>:	leave  
+   0x08048467 <+19>:	ret    
+End of assembler dump.
+
+(gdb) x/s 0x80485b0
+0x80485b0:	 "/bin/cat /home/user/level7/.pass"
+```
+
 
 
 
