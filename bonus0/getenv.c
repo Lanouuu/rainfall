@@ -4,6 +4,6 @@
 void main()
 {
     printf("%s\n", getenv("GROSCRACK"));
-    printf("%x\n", getenv("GROSCRACK"));
+    printf("%p\n", getenv("GROSCRACK"));
     return ;
 }
