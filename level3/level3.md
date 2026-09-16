@@ -82,6 +82,7 @@ La faille réside dans l'utilisation de `printf()` dont le seul argument est le 
 
 Ensuite, à `v+59` on compare la valeur pointée par l'adresse `0x804988c` avec `0x40` (`64` en décimal).
 Cette valeur ne se situe pas sur la pile, il s'agit d'une valeur globale initialisée à `0`.
+
 ``` bash
 (gdb) x/s 0x804988c
 0x804988c <m>:	 ""
