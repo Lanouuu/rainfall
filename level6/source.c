@@ -5,8 +5,6 @@ void n(void)
   return;
 }
 
-
-
 void m(void *param_1,int param_2,char *param_3,int param_4,int param_5)
 
 {
@@ -14,18 +12,14 @@ void m(void *param_1,int param_2,char *param_3,int param_4,int param_5)
   return;
 }
 
-
-
-void main(undefined4 param_1,int param_2)
-
+int main(int argc, char **argv)
 {
-  char *__dest;
-  undefined4 *puVar1;
-  
-  __dest = malloc(0x40);                                    // == 64
-  puVar1 = malloc(4);
-  *puVar1 = m;
-  strcpy(__dest,*(char **)(param_2 + 4));
-  (*(code *)*puVar1)();
-  return;
+    char  *dest     = malloc(64);
+    void **func_ptr = malloc(4);
+    *func_ptr = &m;
+
+    strcpy(dest, argv[1]);
+
+    (*func_ptr)();
+    return 0;
 }
