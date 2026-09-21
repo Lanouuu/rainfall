@@ -46,6 +46,8 @@ On observe trois fonctions clés :
 - `n`** : n'est jamais appelée, mais contient `system("/bin/cat /home/user/level7/.pass")`.
 - `main`** : alloue deux zones mémoire avec `malloc`, copie l'argument avec `strcpy`, puis appelle une fonction via un pointeur de fonction.
 
+La fonction `m()` est appelée dans le main à `main+84.`
+
 ``` bash
 (gdb) disas m
 Dump of assembler code for function m:
@@ -64,8 +66,6 @@ Breakpoint 1 at 0x804847f
 (gdb) x/s 0x80485d1
 0x80485d1:	 "Nope"
 ```
-
-La fonction `m()` est appelée dans le main à `main+84.`
 
 La fonction `n` exécute `system("/bin/cat /home/user/level7/.pass")` et donne ainsi accès au mot de passe du niveau suivant. Elle n'est jamais appelée directement par `main`.
 
