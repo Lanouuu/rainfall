@@ -18,6 +18,8 @@ Le fichier `level2` est un exécutable.
 
 Le bit `SUID` est activé, l'utilisateur `level2` peut exécuter le programme avec les droits de `level3`.
 
+## Analyse
+
 Le code assembleur de la fonction `p` se présente comme ci-dessous :
 
 ``` bash
@@ -104,6 +106,8 @@ $2 = 0xb7e5ebe0 <exit>
 $3 = 0xb7ee4360 <execv>
 ```
 
+## Exploitation
+
 Il faut donc utiliser une autre technique : placer un shellcode dans le buffer et faire pointer `eip` vers une adresse valide ne commençant pas par `0xb`.
 
 Le payload contient le shellcode suivi d'un NOP sled puis de l'adresse `0x0804a008` :
@@ -119,6 +123,8 @@ L'adresse `0x0804a008` est écrite en little-endian :
 ```text
 \x08\xa0\x04\x08
 ```
+
+## Exploit
 
 On envoie ensuite le payload au programme :
 

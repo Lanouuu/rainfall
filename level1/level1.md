@@ -21,6 +21,8 @@ Le fichier `level1` est un exécutable.
 
 Le bit `SUID` est activé, l'utilisateur `level1` peut exécuter le programme avec les droits de `level2`.
 
+## Analyse
+
 En observant le code assembleur, on peut voir une fonction `run` cachée (elle n'est jamais appellée), dans laquelle se trouve un appel à la fonction `system`:
 
 ```Diff
@@ -67,6 +69,8 @@ On observe aussi dans le `main` que de la mémoire est réservée dans la `stack
 
 Ici on a `sub esp,0x50` donc `5 * 16 = 80` bytes réservés. Mais avec l'instruction suivante `lea eax,[esp+0x10]` le buffer pour `gets` commence à 16 bytes plus haut que `esp` soit un buffer de `80 - 16 = 64` bytes.
 
+## Exploitation
+
 On va utiliser ce buffer pour, via un `buffer overflow`, injecter dans `eip` l'adresse de la fonction `run` pour que celle-ci soit exécutée.
 
 En effet, le registre `eip` contient l'adresse de retour d'une fonction, autrement dit l'adresse de la prochaine instruction. En injectant dans `eip` l'adresse de la fonction `run`, à la fin du `gets` la prochaine instruction sera la fonction `run` elle-même.
@@ -107,6 +111,8 @@ Dans la commande ci dessus :
 
 - `echo $(python2 -c 'import sys; sys.stdout.write("A"*76 + "\x44\x84\x04\x08")')` => Permet d'envoyer à `gets` notre payload.
 - `cat` => permet de garder le pipe ouvert et d'envoyer des commandes au shell qui sera ouvert par le programme `level1` et la fonction `run`.
+
+## Exploit
 
 ```Diff
 level1@RainFall:~$ (echo $(python2 -c 'import sys; sys.stdout.write("A"*76 + "\x44\x84\x04\x08")'); cat) | ./level1
