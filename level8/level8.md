@@ -39,7 +39,7 @@ Au début de chaque boucle, leurs adresses sont affichées :
 printf("%p, %p \n", auth, service);     # main<+45>
 ```
 
-Le programme copie le contenu de stdin dans un buffer de 128 octets avec `fgets` et le contenu de ce buffer est comparé avec plusieurs chaines de caractères avec plusieurs appels à `strncmp` qui permettront l'exécution de plusieurs actions.
+Le programme copie le contenu de stdin dans un buffer de 128 octets avec `fgets` et le contenu de ce buffer est comparé avec plusieurs chaines de caractères "auth ", "reset", "service", "login" qui permettront l'exécution de plusieurs actions.
 
 ### `auth`
 
