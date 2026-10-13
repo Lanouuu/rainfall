@@ -29,15 +29,17 @@ char *service;
 Elles sont situées respectivement à :
 
 ```text
-auth    -> 0x08049aac
-service -> 0x08049ab0
+auth    -> 0x08049aac                   # main<+23>
+service -> 0x08049ab0                   # main<+17>
 ```
 
 Au début de chaque boucle, leurs adresses sont affichées :
 
 ```asm
-printf("%p, %p \n", auth, service);
+printf("%p, %p \n", auth, service);     # main<+45>
 ```
+
+Le programme copie le contenu de stdin dans un buffer de 128 octets avec `fgets` et le contenu de ce buffer est comparé avec plusieurs chaines de caractères avec plusieurs appels à `strncmp` qui permettront l'exécution de plusieurs actions.
 
 ### `auth`
 
