@@ -26,7 +26,7 @@ cmp DWORD PTR [esp+0x3c],0x9
 jle ...
 ```
 
-Les valeurs supérieures à `9` sont refusées, mais les valeurs négatives sont acceptées.
+Les valeurs supérieures à `9` font quitter directement le progrqmme, mais les valeurs négatives sont acceptées et permettent de le continuer.
 
 La valeur est ensuite multipliée par `4` et utilisée comme taille pour `memcpy()` :
 
