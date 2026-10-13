@@ -23,32 +23,34 @@ Le binaire possède le **SUID**, il est donc exécuté avec les privilèges de `
 Le programme effectue 4 allocations de 8 octets :
 
 ```asm
-malloc(8) → 0x0804a008
-malloc(8) → 0x0804a018
-malloc(8) → 0x0804a028
-malloc(8) → 0x0804a038
+malloc(8) → 0x0804a008      # main<+16>:
+malloc(8) → 0x0804a018      # main<+42>
+malloc(8) → 0x0804a028      # main<+63>
+malloc(8) → 0x0804a038      # main<+89>
 ```
 
 Les deux premières allocations forment :
 
 ```text
 data1:
-0x0804a008 → 1
-0x0804a00c → 0x0804a018
+[0x0804a008] → 1            # main<+29>
+[0x0804a00c] → 0x0804a018   # main<+53>
 
 data2:
-0x0804a028 → 2
-0x0804a02c → 0x0804a038
+[0x0804a028] → 2            # main<+76>               
+[0x0804a02c] → 0x0804a038   # main<+100>
 ```
+
+Le deuxieme malloc de chaque paire stocke un pointeur dans le champ [+0x4] de la structure précédente. Ces structures en mémoire sont contigues sur la heap.
 
 Les arguments sont ensuite copiés avec `strcpy` :
 
 ```c
-strcpy((char *)data1[1], argv[1]);
-strcpy((char *)data2[1], argv[2]);
+strcpy((char *)data1[1], argv[1]);  // strcpy(0x804a018, argv[1])
+strcpy((char *)data2[1], argv[2]);  // strcpy(0x0804a038, argv[2])
 ```
 
-Les buffers ne font que **8 octets**, ce qui permet de provoquer un heap overflow.
+Les buffers ne font que **8 octets**, et `strcpy` n'inclut pas de limite pour les octets copiés ce qui permet de provoquer un heap overflow.
 
 ## Exploitation
 
@@ -88,6 +90,7 @@ puts("~~");
 ```
 
 l'appel est redirigé vers `m()`.
+
 
 ## Exploit
 
