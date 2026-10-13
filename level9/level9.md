@@ -73,7 +73,7 @@ strlen(argv[1])
 memcpy(this + 4, argv[1], strlen(argv[1]))
 ```
 
-Il n'y a **aucune vérification de taille** avant le `memcpy`.
+Il n'y a aucune vérification de taille avant le `memcpy`.
 
 L'annotation commence donc à :
 

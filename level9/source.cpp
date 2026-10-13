@@ -33,12 +33,12 @@ int main(int argc, char **argv)
     if (argc < 2)
         _exit(1);
 
-    N *n1 = new N(5);
-    N *n2 = new N(6);
+    N *a = new N(5);
+    N *b = new N(6);
 
-    n1->setAnnotation(argv[1]);
+    a->setAnnotation(argv[1]);
 
-    n2->operator+( *n1 );
+    b->operator+( *a );
 
     return 0;
 }
