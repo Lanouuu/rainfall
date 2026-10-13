@@ -25,6 +25,8 @@ AAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAA
 ```
 
+## Analyse
+
 En examinant le code assembleur avec gdb, on comprend que le programme fait un appel à la fonction sécurisée `fgets` puis print son buffer avec `printf`.
 
 L'appel est effectué sous la forme `printf(buffer)` et non `printf("%s", buffer)`. Le contenu contrôlé par l'utilisateur devient donc directement la chaîne de format de printf. Il est alors possible d'utiliser les spécificateurs `%x`, `%p`, `%s` ou `%n`, ce qui constitue une vulnérabilité de type format string.
@@ -116,6 +118,8 @@ A `exit+0` l'étoile `*` signifie saut indirect, on ne saute pas à l'adresse el
 
 `0x8049838` désigne l'emplacement fixe de l'entrée GOT pour `exit`.
 
+## Exploitation
+
 On va modifier l'adresse sur laquelle pointe `0x8049838` pour qu'elle corresponde à l'adresse de `o` (`0x080484a4`).
 Pour cela on va utiliser le spécificateur de `printf` `%n`. Le spécificateur `%n` n'affiche rien. À la place, il écrit dans l'adresse pointée par son argument le nombre de caractères déjà imprimés par printf
 
@@ -130,6 +134,8 @@ AAAA200-b7fd1ac0-b7ff37d0-41414141-252d7825-78252d78-2d78252d-252d7825-78252d78-
 Les quatre "A" apparaissent comme quatrième argument interprété par printf. L'adresse placée au début du payload sera donc également vue comme le quatrième argument, nous utiliserons donc le spécificateur `%4$n` pour modifier la valeur surlquelle elle pointe.
 
 Maintenant que l'on a identifié l'adresse à laquelle écrire, l'emplacement de l'argument de `printf` et l'adresse à écrire sur la valeur pointée par cet argument on va calculer comment lui transmettre la valeur de l'adresse de `o` en décimal. `o` correspond à `0x080484a4` en hexa et à `134513828` en décimal. Cette valeur nous permet de calculer le padding voulu, d'une de largeur 134513824 (soit 134513828, la valeur décimale de l'adresse de `o`, moins les 4 octets déjà émis par l'écriture de l'adresse elle-même).
+
+## Exploit
 
 Voici donc notre exploit sous la forme d'un petit script python ainsi que son résultat:
 

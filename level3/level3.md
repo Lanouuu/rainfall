@@ -30,6 +30,8 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
 Le bit `SUID` est activé, l'utilisateur `level3` peut exécuter le programme avec les droits de `level4`.
 
+## Analyse
+
 En affichant le code assembleur du `main` avec `gdb`, on découvre un appel à la fonction `v` :
 
 ```bash
@@ -134,6 +136,8 @@ On peut le déduire en inspectant les données aux adresses `0x8048600` (`v+71`)
 0x804860d:   "/bin/sh"
 ```
 
+## Exploitation
+
 On va donc utiliser `printf` pour inspecter la pile et modifier la valeur pointée par `0x804988c` afin qu'elle corresponde à 64 octets.
 
 Pour ce faire, on va utiliser le format string `%x` pour calculer à quelle place se trouve l'argument de `printf`.
@@ -161,6 +165,8 @@ Avant modification, la valeur pointée par `0x804988c` correspond à `0` :
 Et comme on l'a vu à `v+59`, le programme compare la valeur ciblée à `0x40` (`64` en décimal). On va donc construire un exploit qui écrit 64 octets à l'adresse pointée par `0x804988c`.
 
 On a aussi démontré que le 4e argument lu par `printf` correspond aux 4 premiers octets de notre propre buffer. Il suffit donc de placer l'adresse cible (`0x804988c`) en tout début de la chaîne pour que `%4$n` écrive directement à cette adresse.
+
+## Exploit
 
 Voici notre exploit :
 

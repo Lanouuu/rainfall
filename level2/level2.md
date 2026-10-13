@@ -28,8 +28,8 @@ Dump of assembler code for function p:
    0x080484d4 <+0>:	push   ebp                              # Prologue
    0x080484d5 <+1>:	mov    ebp,esp                          # Prologue
    0x080484d7 <+3>:	sub    esp,0x68                         # Ajout de 104 octets sur la stack (espace global)
-   0x080484da <+6>:	mov    eax,ds:0x8049860                 # 
-   0x080484df <+11>:	mov    DWORD PTR [esp],eax            # 
+   0x080484da <+6>:	mov    eax,ds:0x8049860                 
+   0x080484df <+11>:	mov    DWORD PTR [esp],eax            
    0x080484e2 <+14>:	call   0x80483b0 <fflush@plt>
    0x080484e7 <+19>:	lea    eax,[ebp-0x4c]                 # On met la valeur de ebp - 76 octets dans eax
    0x080484ea <+22>:	mov    DWORD PTR [esp],eax            # esp pointe vers l'adresse dans eax (buffer)

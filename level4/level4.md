@@ -30,6 +30,8 @@ AAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAA
 ```
 
+## Analyse
+
 En observant le code assembleur, on peut voir un appel à la fonction `n`, puis à `p` et, dans `n`, un appel à `system`. C'est ce `system` qu'on va vouloir exécuter, car, en examinant son argument, il nous permettra de récupérer le mot de passe du level 5.
 
 ```bash
@@ -168,6 +170,8 @@ Disassembly of section .data:
 
 Le défi ici relève d'une faille de type format string.
 
+## Exploitation
+
 Nous allons donc construire un exploit qui va écrire 16930116 octets à l'adresse `0x8049810`.
 
 Pour cela, on identifie la position de l'argument du `printf` dans sa sortie avec le spécificateur `%x` :
@@ -179,6 +183,8 @@ AAAAb7ff26b0-bffff784-b7fd0ff4-00000000-00000000-bffff748-0804848d-bffff540-0000
 ```
 
 Comme l'indique la valeur `41` en hexa (correspondant au char `'A'`), l'argument du `printf` se situe à la douzième position.
+
+## Exploit
 
 Pour l'exploit, on va écrire un script Python qui écrit :
 

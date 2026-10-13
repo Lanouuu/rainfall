@@ -32,6 +32,8 @@ Segmentation fault (core dumped)
 
 Sans argument : segfault. Avec un argument court : affiche `"Nope"`. Avec un argument trop long : segfault. La faille est dans une fonction `strcpy` non bornée.
 
+## Analyse
+
 On identifie l'appel a plusieurs fonctions avec gdb :
 
 ```bash
@@ -131,6 +133,8 @@ L'offset entre leurs adresses de début est :
 ```
 
 `strcpy(dest, argv[1])` a `main+73` ne vérifie pas la taille de la source. Si `argv[1]` dépasse 64 octets (la taille allouée pour `dest`), la copie déborde dans la zone suivante de la heap, qui contient précisément le pointeur de fonction appelé juste après (`call eax` a `main+84`).
+
+## Exploit
 
 Il suffit donc d'écrire 72 octets de padding (pour traverser tout le bloc `dest` jusqu'à atteindre le pointeur de fonction), puis l'adresse de `n()` pour remplacer le pointeur de `m()` par celui de `n()`.
 
