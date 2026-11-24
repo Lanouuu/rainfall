@@ -17,6 +17,17 @@ Le fichier `level0` est un exécutable.
 
 Le bit `SUID` est activé, l'utilisateur `level0` peut exécuter le programme avec les droits de `level1`.
 
+On comprend que le programme attend une certaine entrée, sinon il segfault ou affiche la chaine "No !" :
+
+``` bash
+level0@RainFall:~$ ./level0 
+Segmentation fault (core dumped)
+level0@RainFall:~$ ./level0 edff
+No !
+level0@RainFall:~$ ./level0 3333
+No !
+```
+
 ## Analyse
 
 Le code assembleur se présente comme ci-dessous:
@@ -26,8 +37,8 @@ Le code assembleur se présente comme ci-dessous:
    0x08048ec1 <+1>:	mov    ebp,esp
    0x08048ec3 <+3>:	and    esp,0xfffffff0
    0x08048ec6 <+6>:	sub    esp,0x20
-   0x08048ec9 <+9>:	mov    eax,DWORD PTR [ebp+0xc]
-   0x08048ecc <+12>:	add    eax,0x4
+   0x08048ec9 <+9>:	mov    eax,DWORD PTR [ebp+0xc]   # on récupère l'adresse de argv[0]
+   0x08048ecc <+12>:	add    eax,0x4                   # on récupère argv[1]
    0x08048ecf <+15>:	mov    eax,DWORD PTR [eax]
    0x08048ed1 <+17>:	mov    DWORD PTR [esp],eax
 +  0x08048ed4 <+20>:	call   0x8049710 <atoi>
