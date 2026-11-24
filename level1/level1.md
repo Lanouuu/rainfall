@@ -51,7 +51,7 @@ Via gdb on peut obtenir le programme qui sera lancé par `system`:
 +0x8048584:	 "/bin/sh"
 ```
 
-C'est donc un shell qui sera exécuter avec les droits de `level2`. On va donc pouvoir `cat` le fichier `.pass` présent dans le `home` du user `level2`.
+C'est donc un shell qui sera exécuté avec les droits de `level2`. On va donc pouvoir `cat` le fichier `.pass` présent dans le `home` du user `level2`.
 
 On observe aussi dans le `main` que de la mémoire est réservée dans la `stack` pour stocker le retour de la fonction `gets`:
 
