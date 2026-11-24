@@ -9,7 +9,7 @@ void    p(char *buffer)
     return ;
 }
 
-void    n()
+void    n(void)
 {
     char    buffer[520];
 

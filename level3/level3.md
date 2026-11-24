@@ -17,6 +17,7 @@ rw-r--r-- 1 level3 level3  675 Apr  3  2012 .profile
 ```
 
 Le fichier `level3` est un exécutable.
+Le bit `SUID` est activé, l'utilisateur `level3` peut exécuter le programme avec les droits de `level4`.
 
 Le programme attend une string qu'il affiche sur stdout :
 
@@ -27,8 +28,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 ```
-
-Le bit `SUID` est activé, l'utilisateur `level3` peut exécuter le programme avec les droits de `level4`.
 
 ## Analyse
 
@@ -106,7 +105,7 @@ Cette valeur ne se situe pas sur la pile, il s'agit d'une valeur globale initial
 0x804988c <m>: 0
 ```
 
-La valeur de la variable `m` se trouve en effet dans la section `.data`, comme le relève l'inspection de l'ELF avec `objdump`.
+La valeur de la variable `m` se trouve en effet dans la section `.data`, comme le révèle l'inspection de l'ELF avec `objdump`.
 
 ```bash
 level3@RainFall:~$ objdump -D level3
