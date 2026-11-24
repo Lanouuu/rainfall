@@ -4,7 +4,7 @@ void n(void)
   return;
 }
 
-void m(void *param_1,int param_2,char *param_3,int param_4,int param_5)
+void m(void)
 {
   puts("Nope");
   return;
