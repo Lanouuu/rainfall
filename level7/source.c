@@ -5,7 +5,7 @@
 
 char c[80];
 
-void m(void *param1, int param2, char *param3, int param4, int param5)
+void m(void)
 {
     time_t timestamp;
 

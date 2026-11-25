@@ -16,7 +16,7 @@ rw-r--r--+ 1 level7 level7   65 Sep 23  2015 .pass
 rw-r--r--  1 level7 level7  675 Apr  3  2012 .profile
 ```
 
-Le binaire possède le **SUID**, il est donc exécuté avec les privilèges de `level8`.
+Le binaire possède les bits SUID et SGID, il est donc exécuté avec les privilèges de `level8`.
 
 ## Analyse
 
@@ -50,7 +50,7 @@ strcpy((char *)data1[1], argv[1]);  // strcpy(0x804a018, argv[1])
 strcpy((char *)data2[1], argv[2]);  // strcpy(0x0804a038, argv[2])
 ```
 
-Les buffers ne font que **8 octets**, et `strcpy` n'inclut pas de limite pour les octets copiés ce qui permet de provoquer un heap overflow.
+Les buffers ne font que 8 octets, et `strcpy` n'inclut pas de limite pour les octets copiés ce qui permet de provoquer un heap overflow. Ainsi si la chaîne source dépasse la capacité de la destination, elle écrit hors des limites de l'allocation.
 
 ## Exploitation
 
@@ -67,7 +67,7 @@ strcpy(0x0804a018, "AAAAAAAAAAAAAAAAAAAAAAAA")
 strcpy(0x41414141, "BBBBBBBB")
 ```
 
-Le premier `strcpy` écrase donc `data2[1]`.
+Avec ltrace on peut observer que lorsque le premier input dépasse une certaine taille l'adresse de destination du second strcpy() n'est plus celle initialement prévue. On en conclut que le premier `strcpy` écrase `data2[1]`.
 
 On peut remplacer ce pointeur par l'adresse de la GOT de `puts` :
 
