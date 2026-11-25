@@ -17,12 +17,12 @@ public:
         memcpy((char *)this + 4, annotation, strlen(annotation));
     }
 
-    int operator+(N &other)
+    virtual int operator+(N &other)
     {
         return other.value + this->value;
     }
 
-    int operator-(N &other)
+    virtual int operator-(N &other)
     {
         return this->value - other.value;
     }

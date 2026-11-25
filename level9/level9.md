@@ -105,9 +105,9 @@ mov edx, [eax]
 call edx
 ```
 
-Le programme récupère donc la **vtable de `b`**, prend sa première entrée et l'utilise comme adresse de fonction.
+Le désassemblage met en évidence un appel indirect lié au mécanisme de dispatch virtuel. L'analyse des instructions précédant cet appel permet de comprendre comment l'adresse de la fonction appelée est récupérée.
 
-En débordant `a`, on peut remplacer cette vtable par une adresse contrôlée.
+En débordant `a`, on peut remplacer la vtable de b par une adresse contrôlée.
 
 On place alors :
 
